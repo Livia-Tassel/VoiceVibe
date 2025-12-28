@@ -51,6 +51,14 @@ function App() {
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // ESC: blur current input to restore shortcuts
+      if (e.code === 'Escape') {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+        return
+      }
+
       // Option+Command+T: 优化
       if (e.altKey && e.metaKey && e.code === 'KeyT') {
         e.preventDefault()
