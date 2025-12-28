@@ -1,4 +1,4 @@
-import { Settings, Activity } from 'lucide-react'
+import { Settings, Mic } from 'lucide-react'
 
 interface HeaderProps {
   status: 'idle' | 'listening' | 'transcribing' | 'processing' | 'ready'
@@ -7,32 +7,41 @@ interface HeaderProps {
 
 export function Header({ status, onSettingsClick }: HeaderProps) {
   const statusConfig = {
-    idle: { color: 'bg-gray-500', text: '就绪' },
-    listening: { color: 'bg-red-500 animate-pulse', text: '录音中...' },
-    transcribing: { color: 'bg-blue-500 animate-pulse', text: '转录中...' },
-    processing: { color: 'bg-yellow-500 animate-pulse', text: '优化中...' },
-    ready: { color: 'bg-green-500', text: '完成' },
+    idle: { color: 'bg-gray-500', text: '就绪', glow: '' },
+    listening: { color: 'bg-red-500', text: '录音中...', glow: 'shadow-red-500/50 shadow-lg' },
+    transcribing: { color: 'bg-blue-500', text: '转录中...', glow: 'shadow-blue-500/50 shadow-lg' },
+    processing: { color: 'bg-amber-500', text: '优化中...', glow: 'shadow-amber-500/50 shadow-lg' },
+    ready: { color: 'bg-emerald-500', text: '完成', glow: 'shadow-emerald-500/50 shadow-lg' },
   }
 
-  const { color, text } = statusConfig[status]
+  const { color, text, glow } = statusConfig[status]
+  const isActive = status !== 'idle'
 
   return (
     <header
-      className="flex items-center justify-between px-4 py-3 bg-vibe-gray/80 border-b border-vibe-border"
+      className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-vibe-gray/90 to-vibe-gray/70 border-b border-vibe-border backdrop-blur-sm"
       style={{ WebkitAppRegion: 'drag', paddingLeft: '80px' } as React.CSSProperties}
     >
       {/* Logo */}
-      <div className="flex items-center gap-2">
-        <div className="p-1.5 bg-vibe-accent rounded-lg">
-          <Activity size={18} className="text-white" />
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30">
+            <Mic size={18} className="text-white" />
+          </div>
+          {isActive && (
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+          )}
         </div>
-        <span className="text-lg font-bold text-white tracking-tight">VoiceVibe</span>
+        <div className="flex flex-col">
+          <span className="text-lg font-bold text-white tracking-tight">VoiceVibe</span>
+          <span className="text-[10px] text-gray-500 -mt-0.5">语音转 Prompt</span>
+        </div>
       </div>
 
-      {/* Status */}
-      <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full ${color}`} />
-        <span className="text-sm text-gray-400">{text}</span>
+      {/* Status Indicator */}
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-vibe-dark/50 transition-all duration-300 ${isActive ? glow : ''}`}>
+        <span className={`w-2 h-2 rounded-full ${color} ${isActive ? 'animate-pulse' : ''}`} />
+        <span className="text-xs font-medium text-gray-300">{text}</span>
       </div>
 
       {/* Settings */}
@@ -42,8 +51,8 @@ export function Header({ status, onSettingsClick }: HeaderProps) {
       >
         <button
           onClick={onSettingsClick}
-          className="p-2 rounded-lg hover:bg-vibe-light transition-colors text-gray-400 hover:text-white"
-          title="Settings"
+          className="p-2 rounded-lg hover:bg-vibe-light/80 transition-all duration-200 text-gray-400 hover:text-white hover:scale-105"
+          title="设置"
         >
           <Settings size={18} />
         </button>

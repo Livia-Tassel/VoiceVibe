@@ -13,7 +13,7 @@ export interface ElectronAPI {
     read: () => Promise<string>
   }
   whisper: {
-    transcribe: (args: { audioData: number[], language: string }) => Promise<{ ok: boolean, text?: string, error?: string }>
+    transcribe: (args: { audioData: number[], language: string, appId: string, apiKey: string, apiSecret: string }) => Promise<{ ok: boolean, text?: string, error?: string }>
   }
   openai: {
     chat: (args: { messages: Array<{ role: string, content: string }>, apiKey: string, proxyUrl?: string, apiBaseUrl?: string, model?: string }) => Promise<{ ok: boolean, status?: number, data?: any, error?: string }>
@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     read: () => ipcRenderer.invoke('clipboard:read'),
   },
   whisper: {
-    transcribe: (args: { audioData: number[], language: string }) =>
+    transcribe: (args: { audioData: number[], language: string, appId: string, apiKey: string, apiSecret: string }) =>
       ipcRenderer.invoke('whisper:transcribe', args),
   },
   openai: {

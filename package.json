@@ -3,13 +3,19 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Desktop Voice-to-Prompt Tool",
+  "author": "VoiceVibe Team",
+  "license": "MIT",
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder",
+    "build": "tsc && vite build",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:mac-x64": "npm run build && electron-builder --mac --x64",
+    "build:mac-arm64": "npm run build && electron-builder --mac --arm64",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"electron .\"",
-    "start": "electron ."
+    "start": "electron .",
+    "icons": "node scripts/convert-icon.mjs && electron-icon-builder --input=assets/icon.png --output=assets"
   },
   "dependencies": {
     "@xenova/transformers": "^2.17.2",
@@ -33,7 +39,9 @@
     "concurrently": "^8.2.0",
     "electron": "^25.3.1",
     "electron-builder": "^24.4.0",
+    "electron-icon-builder": "^2.0.1",
     "postcss": "^8.4.27",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.1.6",
     "vite": "^4.4.7",
@@ -43,8 +51,38 @@
   "build": {
     "appId": "com.voicevibe.app",
     "productName": "VoiceVibe",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
     "mac": {
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "icon": "assets/icons/mac/icon.icns",
+      "target": [
+        "dmg"
+      ],
+      "identity": null
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     }
   }
 }
