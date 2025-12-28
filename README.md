@@ -32,7 +32,7 @@
 
 ### macOS
 
-1. 从 [Releases](https://github.com/yourusername/voicevibe/releases) 下载最新的 `.dmg` 文件
+1. 从 [Releases](https://github.com/Livia-Tassel/voicevibe/releases) 下载最新的 `.dmg` 文件
 2. 打开 DMG，将 VoiceVibe 拖入 Applications 文件夹
 3. 首次打开时，右键点击应用选择"打开"（绕过 Gatekeeper）
 
@@ -40,7 +40,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/voicevibe.git
+git clone https://github.com/Livia-Tassel/voicevibe.git
 cd voicevibe
 
 # 安装依赖
