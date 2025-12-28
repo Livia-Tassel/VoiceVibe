@@ -10,7 +10,6 @@ export interface Settings {
   apiKey: string
   apiBaseUrl: string
   chatModel: string
-  whisperModel: string
   autoCopy: boolean
   globalShortcut: string
   proxyUrl: string
@@ -20,9 +19,8 @@ const DEFAULT_SETTINGS: Settings = {
   apiKey: '',
   apiBaseUrl: 'https://api.openai.com',
   chatModel: 'gpt-4o-mini',
-  whisperModel: 'whisper-1',
   autoCopy: true,
-  globalShortcut: 'Option+P',
+  globalShortcut: 'Option+Command+P',
   proxyUrl: '',
 }
 
@@ -69,10 +67,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setSettings(prev => ({ ...prev, chatModel: e.target.value }))
   }
 
-  const handleWhisperModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSettings(prev => ({ ...prev, whisperModel: e.target.value }))
-  }
-
   const handleProxyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSettings(prev => ({ ...prev, proxyUrl: e.target.value }))
   }
@@ -106,7 +100,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {/* API Key */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-300">
-              OpenAI API Key
+              API Key
             </label>
             <div className="relative">
               <input
@@ -125,7 +119,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </button>
             </div>
             <p className="text-xs text-gray-500">
-              API Key 仅存储在本地，不会发送到其他服务器
+              用于 AI 优化提示词（语音识别使用 Google 免费服务）
             </p>
           </div>
 
@@ -142,7 +136,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               className="w-full px-4 py-2.5 bg-vibe-dark border border-vibe-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vibe-accent focus:border-transparent transition-all"
             />
             <p className="text-xs text-gray-500">
-              使用第三方 API 服务时修改此地址（如 NEW API）
+              使用第三方 API 服务时修改此地址
             </p>
           </div>
 
@@ -163,23 +157,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </p>
           </div>
 
-          {/* Whisper Model */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
-              语音转录模型
-            </label>
-            <input
-              type="text"
-              value={settings.whisperModel}
-              onChange={handleWhisperModelChange}
-              placeholder="whisper-1"
-              className="w-full px-4 py-2.5 bg-vibe-dark border border-vibe-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vibe-accent focus:border-transparent transition-all"
-            />
-            <p className="text-xs text-gray-500">
-              如 whisper-1 或第三方服务支持的其他模型
-            </p>
-          </div>
-
           {/* Proxy */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-300">
@@ -193,7 +170,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               className="w-full px-4 py-2.5 bg-vibe-dark border border-vibe-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vibe-accent focus:border-transparent transition-all"
             />
             <p className="text-xs text-gray-500">
-              如果无法连接 OpenAI API，请填写代理地址
+              如果无法连接 API，请填写代理地址
             </p>
           </div>
 

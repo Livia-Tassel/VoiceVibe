@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Header } from './components/Header'
 import { SpeechInput } from './components/SpeechInput'
 import { PromptOutput } from './components/PromptOutput'
 import { SettingsModal, getSettings } from './components/SettingsModal'
 import { Toast } from './components/Toast'
-import { useAudioRecorder } from './hooks/useAudioRecorder'
-import { transcribeAudio } from './services/whisper'
+import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { refinePrompt } from './services/ai'
 
-type AppStatus = 'idle' | 'listening' | 'transcribing' | 'processing' | 'ready'
+type AppStatus = 'idle' | 'listening' | 'processing' | 'ready'
 
 interface ToastState {
   show: boolean
@@ -19,36 +18,44 @@ interface ToastState {
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [status, setStatus] = useState<AppStatus>('idle')
-  const [transcript, setTranscript] = useState('')
   const [refinedPrompt, setRefinedPrompt] = useState('')
   const [isRefining, setIsRefining] = useState(false)
-  const [isTranscribing, setIsTranscribing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' })
 
   const {
-    isRecording,
-    startRecording,
-    stopRecording,
-    resetRecording,
-  } = useAudioRecorder()
+    isListening,
+    transcript,
+    interimTranscript,
+    error: speechError,
+    isSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+    setTranscript,
+  } = useSpeechRecognition()
 
   // Update status based on state
   useEffect(() => {
     if (isRefining) {
       setStatus('processing')
-    } else if (isTranscribing) {
-      setStatus('transcribing')
-    } else if (isRecording) {
+    } else if (isListening) {
       setStatus('listening')
     } else if (refinedPrompt) {
       setStatus('ready')
     } else {
       setStatus('idle')
     }
-  }, [isRecording, isTranscribing, isRefining, refinedPrompt])
+  }, [isListening, isRefining, refinedPrompt])
 
-  // Handle spacebar to toggle recording
+  // Sync speech error to app error
+  useEffect(() => {
+    if (speechError) {
+      setError(speechError)
+    }
+  }, [speechError])
+
+  // Handle spacebar to toggle listening
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in textarea
@@ -58,66 +65,38 @@ function App() {
 
       if (e.code === 'Space') {
         e.preventDefault()
-        if (isRecording) {
-          handleStopRecording()
+        if (isListening) {
+          stopListening()
         } else {
-          handleStartRecording()
+          handleStartListening()
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isRecording])
+  }, [isListening])
 
-  const handleStartRecording = useCallback(async () => {
+  const handleStartListening = () => {
     setError(null)
-    await startRecording()
-  }, [startRecording])
+    startListening()
+  }
 
-  const handleStopRecording = useCallback(async () => {
-    const audioBlob = await stopRecording()
+  const handleStopListening = async () => {
+    stopListening()
 
-    if (!audioBlob) {
-      console.log('没有录到音频')
-      return
+    // 自动优化（如果有文本）
+    if (transcript.trim()) {
+      await handleRefineWithText(transcript)
     }
-
-    console.log('录音完成，大小:', audioBlob.size, 'bytes')
-
-    const settings = getSettings()
-
-    if (!settings.apiKey) {
-      setError('请在设置中填入 OpenAI API Key')
-      setIsSettingsOpen(true)
-      return
-    }
-
-    // 转录音频
-    setIsTranscribing(true)
-    console.log('开始转录...')
-    const transcribeResult = await transcribeAudio(audioBlob, settings.apiKey, settings.proxyUrl, settings.apiBaseUrl, settings.whisperModel)
-    setIsTranscribing(false)
-    console.log('转录结果:', transcribeResult)
-
-    if (!transcribeResult.success || !transcribeResult.text) {
-      setError(transcribeResult.error || '转录失败')
-      return
-    }
-
-    const newTranscript = transcript + (transcript ? ' ' : '') + transcribeResult.text
-    setTranscript(newTranscript)
-
-    // 自动优化
-    await handleRefineWithText(newTranscript)
-  }, [stopRecording, transcript])
+  }
 
   const handleRefineWithText = async (text?: string) => {
     const settings = getSettings()
     const inputText = text || transcript
 
     if (!settings.apiKey) {
-      setError('请在设置中填入 OpenAI API Key')
+      setError('请在设置中填入 API Key')
       setIsSettingsOpen(true)
       return
     }
@@ -169,8 +148,7 @@ function App() {
   }
 
   const handleClearInput = () => {
-    setTranscript('')
-    resetRecording()
+    resetTranscript()
     setError(null)
   }
 
@@ -188,12 +166,12 @@ function App() {
         <div className="bg-vibe-dark overflow-hidden">
           <SpeechInput
             transcript={transcript}
-            interimTranscript={isTranscribing ? '正在转录...' : (isRecording ? '正在录音...' : '')}
-            isListening={isRecording}
-            isSupported={true}
+            interimTranscript={interimTranscript}
+            isListening={isListening}
+            isSupported={isSupported}
             onTranscriptChange={setTranscript}
-            onStartListening={handleStartRecording}
-            onStopListening={handleStopRecording}
+            onStartListening={handleStartListening}
+            onStopListening={handleStopListening}
             onClear={handleClearInput}
           />
         </div>
@@ -202,7 +180,7 @@ function App() {
         <div className="bg-vibe-gray/30 overflow-hidden">
           <PromptOutput
             content={refinedPrompt}
-            isLoading={isRefining || isTranscribing}
+            isLoading={isRefining}
             error={error}
             onContentChange={setRefinedPrompt}
             onCopy={() => copyToClipboard()}
