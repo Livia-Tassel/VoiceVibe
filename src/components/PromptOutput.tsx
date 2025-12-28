@@ -58,6 +58,7 @@ export function PromptOutput({
           </div>
         ) : (
           <textarea
+            id="output-textarea"
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             placeholder="优化后的结构化 Prompt 将显示在这里..."

@@ -61,7 +61,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
     recognition.continuous = true
     recognition.interimResults = true
-    recognition.lang = 'zh-CN' // 改为中文，如需英文可改为 'en-US'
+    recognition.lang = 'zh-CN' // 中文
 
     recognition.onstart = () => {
       console.log('Speech recognition started')
@@ -92,19 +92,17 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       console.error('Speech recognition error:', event.error)
 
       if (event.error === 'no-speech') {
-        // 没有检测到语音，继续监听
         return
       }
 
       if (event.error === 'aborted') {
-        // 被中止，可能是用户手动停止
         return
       }
 
       if (event.error === 'not-allowed') {
         setError('麦克风权限被拒绝。请在系统设置中允许麦克风访问。')
       } else if (event.error === 'network') {
-        setError('网络错误。语音识别需要网络连接。')
+        setError('网络错误。请检查网络连接或尝试开启系统听写功能（系统设置 > 键盘 > 听写）')
       } else {
         setError(`语音识别错误: ${event.error}`)
       }
@@ -116,7 +114,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     recognition.onend = () => {
       console.log('Speech recognition ended, shouldRestart:', shouldRestartRef.current)
 
-      // 如果应该继续监听，自动重启
       if (shouldRestartRef.current) {
         try {
           recognition.start()
@@ -141,7 +138,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const startListening = useCallback(async () => {
     if (!recognitionRef.current) return
 
-    // 先请求麦克风权限
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true })
     } catch (err) {
@@ -157,7 +153,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       recognitionRef.current.start()
     } catch (err) {
       console.error('Failed to start recognition:', err)
-      // 如果已经在运行，先停止再重启
       try {
         recognitionRef.current.stop()
         setTimeout(() => {

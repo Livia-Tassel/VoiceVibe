@@ -18,7 +18,15 @@ export default defineConfig({
               formats: ['cjs']
             },
             rollupOptions: {
-              external: ['electron', 'node-fetch', 'form-data', 'https-proxy-agent'],
+              external: [
+                'electron',
+                'node-fetch',
+                'form-data',
+                'https-proxy-agent',
+                '@xenova/transformers',
+                'onnxruntime-node',
+                'sharp',
+              ],
               output: {
                 entryFileNames: '[name].cjs'
               }

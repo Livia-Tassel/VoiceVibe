@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Header } from './components/Header'
 import { SpeechInput } from './components/SpeechInput'
 import { PromptOutput } from './components/PromptOutput'
 import { SettingsModal, getSettings } from './components/SettingsModal'
 import { Toast } from './components/Toast'
-import { useSpeechRecognition } from './hooks/useSpeechRecognition'
+import { useAudioRecorder } from './hooks/useAudioRecorder'
+import { transcribeAudio } from './services/whisper'
 import { refinePrompt } from './services/ai'
 
-type AppStatus = 'idle' | 'listening' | 'processing' | 'ready'
+type AppStatus = 'idle' | 'listening' | 'transcribing' | 'processing' | 'ready'
 
 interface ToastState {
   show: boolean
@@ -18,78 +19,115 @@ interface ToastState {
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [status, setStatus] = useState<AppStatus>('idle')
+  const [transcript, setTranscript] = useState('')
   const [refinedPrompt, setRefinedPrompt] = useState('')
   const [isRefining, setIsRefining] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' })
 
   const {
-    isListening,
-    transcript,
-    interimTranscript,
-    error: speechError,
-    isSupported,
-    startListening,
-    stopListening,
-    resetTranscript,
-    setTranscript,
-  } = useSpeechRecognition()
+    isRecording,
+    startRecording,
+    stopRecording,
+    resetRecording,
+  } = useAudioRecorder()
 
   // Update status based on state
   useEffect(() => {
     if (isRefining) {
       setStatus('processing')
-    } else if (isListening) {
+    } else if (isTranscribing) {
+      setStatus('transcribing')
+    } else if (isRecording) {
       setStatus('listening')
     } else if (refinedPrompt) {
       setStatus('ready')
     } else {
       setStatus('idle')
     }
-  }, [isListening, isRefining, refinedPrompt])
+  }, [isRecording, isTranscribing, isRefining, refinedPrompt])
 
-  // Sync speech error to app error
-  useEffect(() => {
-    if (speechError) {
-      setError(speechError)
-    }
-  }, [speechError])
-
-  // Handle spacebar to toggle listening
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in textarea
+      // Option+Command+T: 优化
+      if (e.altKey && e.metaKey && e.code === 'KeyT') {
+        e.preventDefault()
+        if (!isRefining && transcript.trim()) {
+          handleRefine()
+        }
+        return
+      }
+
+      // Ignore other shortcuts if typing in textarea/input
       if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
         return
       }
 
+      // Spacebar: toggle recording
       if (e.code === 'Space') {
         e.preventDefault()
-        if (isListening) {
-          stopListening()
+        if (isRecording) {
+          handleStopRecording()
         } else {
-          handleStartListening()
+          handleStartRecording()
         }
+        return
+      }
+
+      // /: focus input textarea
+      if (e.code === 'Slash' && !e.shiftKey) {
+        e.preventDefault()
+        document.getElementById('input-textarea')?.focus()
+        return
+      }
+
+      // Shift+/ (?): focus output textarea
+      if (e.code === 'Slash' && e.shiftKey) {
+        e.preventDefault()
+        document.getElementById('output-textarea')?.focus()
+        return
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isListening])
+  }, [isRecording, isRefining, transcript])
 
-  const handleStartListening = () => {
+  const handleStartRecording = useCallback(async () => {
     setError(null)
-    startListening()
-  }
+    await startRecording()
+  }, [startRecording])
 
-  const handleStopListening = async () => {
-    stopListening()
+  const handleStopRecording = useCallback(async () => {
+    const audioBlob = await stopRecording()
 
-    // 自动优化（如果有文本）
-    if (transcript.trim()) {
-      await handleRefineWithText(transcript)
+    if (!audioBlob) {
+      console.log('没有录到音频')
+      return
     }
-  }
+
+    console.log('录音完成，大小:', audioBlob.size, 'bytes')
+
+    // 本地转录音频
+    setIsTranscribing(true)
+    console.log('开始本地转录...')
+    const transcribeResult = await transcribeAudio(audioBlob, 'zh')
+    setIsTranscribing(false)
+    console.log('转录结果:', transcribeResult)
+
+    if (!transcribeResult.success || !transcribeResult.text) {
+      setError(transcribeResult.error || '转录失败')
+      return
+    }
+
+    const newTranscript = transcript + (transcript ? ' ' : '') + transcribeResult.text
+    setTranscript(newTranscript)
+
+    // 自动优化
+    await handleRefineWithText(newTranscript)
+  }, [stopRecording, transcript])
 
   const handleRefineWithText = async (text?: string) => {
     const settings = getSettings()
@@ -148,7 +186,8 @@ function App() {
   }
 
   const handleClearInput = () => {
-    resetTranscript()
+    setTranscript('')
+    resetRecording()
     setError(null)
   }
 
@@ -166,12 +205,12 @@ function App() {
         <div className="bg-vibe-dark overflow-hidden">
           <SpeechInput
             transcript={transcript}
-            interimTranscript={interimTranscript}
-            isListening={isListening}
-            isSupported={isSupported}
+            interimTranscript={isTranscribing ? '正在转录...' : (isRecording ? '正在录音...' : '')}
+            isListening={isRecording}
+            isSupported={true}
             onTranscriptChange={setTranscript}
-            onStartListening={handleStartListening}
-            onStopListening={handleStopListening}
+            onStartListening={handleStartRecording}
+            onStopListening={handleStopRecording}
             onClear={handleClearInput}
           />
         </div>
@@ -180,7 +219,7 @@ function App() {
         <div className="bg-vibe-gray/30 overflow-hidden">
           <PromptOutput
             content={refinedPrompt}
-            isLoading={isRefining}
+            isLoading={isRefining || isTranscribing}
             error={error}
             onContentChange={setRefinedPrompt}
             onCopy={() => copyToClipboard()}
