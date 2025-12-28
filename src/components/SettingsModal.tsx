@@ -7,21 +7,30 @@ interface SettingsModalProps {
 }
 
 export interface Settings {
+  // Prompt 优化 API 配置
   apiKey: string
   apiBaseUrl: string
   chatModel: string
+  proxyUrl: string
+  // 语音识别 API 配置（讯飞）
+  speechAppId: string
+  speechApiKey: string
+  speechApiSecret: string
+  // 偏好设置
   autoCopy: boolean
   globalShortcut: string
-  proxyUrl: string
 }
 
 const DEFAULT_SETTINGS: Settings = {
   apiKey: '',
   apiBaseUrl: 'https://api.openai.com',
   chatModel: 'gpt-4o-mini',
+  proxyUrl: '',
+  speechAppId: '',
+  speechApiKey: '',
+  speechApiSecret: '',
   autoCopy: true,
   globalShortcut: 'Option+Command+P',
-  proxyUrl: '',
 }
 
 export function getSettings(): Settings {
@@ -43,6 +52,7 @@ export function saveSettings(settings: Settings): void {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [settings, setSettings] = useState<Settings>(getSettings)
   const [showApiKey, setShowApiKey] = useState(false)
+  const [showSpeechApiKey, setShowSpeechApiKey] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -63,7 +73,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-vibe-gray border border-vibe-border rounded-xl shadow-2xl w-[480px] max-h-[85vh] overflow-hidden">
+      <div className="relative bg-vibe-gray border border-vibe-border rounded-xl shadow-2xl w-[520px] max-h-[85vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-vibe-border">
           <h2 className="text-lg font-semibold text-white">设置</h2>
@@ -77,9 +87,72 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         {/* Content */}
         <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
-          {/* API Settings Section */}
+          {/* Speech API Settings Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">API 配置</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">语音识别 API（讯飞）</h3>
+              <a
+                href="https://console.xfyun.cn/services/iat"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-vibe-accent hover:underline"
+              >
+                获取 API Key
+              </a>
+            </div>
+
+            {/* AppID */}
+            <div className="space-y-1.5">
+              <label className="block text-sm text-gray-400">AppID</label>
+              <input
+                type="text"
+                value={settings.speechAppId}
+                onChange={(e) => setSettings(prev => ({ ...prev, speechAppId: e.target.value }))}
+                placeholder="12345678"
+                className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+              />
+            </div>
+
+            {/* APIKey & APISecret */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-sm text-gray-400">APIKey</label>
+                <div className="relative">
+                  <input
+                    type={showSpeechApiKey ? 'text' : 'password'}
+                    value={settings.speechApiKey}
+                    onChange={(e) => setSettings(prev => ({ ...prev, speechApiKey: e.target.value }))}
+                    placeholder="xxxxxxxx"
+                    className="w-full px-3 py-2 pr-10 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSpeechApiKey(!showSpeechApiKey)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                  >
+                    {showSpeechApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-sm text-gray-400">APISecret</label>
+                <input
+                  type="password"
+                  value={settings.speechApiSecret}
+                  onChange={(e) => setSettings(prev => ({ ...prev, speechApiSecret: e.target.value }))}
+                  placeholder="xxxxxxxx"
+                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-vibe-border" />
+
+          {/* Prompt API Settings Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Prompt 优化 API</h3>
 
             {/* API Key */}
             <div className="space-y-1.5">

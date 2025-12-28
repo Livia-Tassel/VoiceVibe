@@ -1,62 +1,169 @@
 import { app, BrowserWindow, globalShortcut, ipcMain, clipboard, screen, session } from 'electron'
 import { join } from 'path'
-import { writeFileSync, unlinkSync, mkdirSync, existsSync } from 'fs'
-import { tmpdir } from 'os'
+import { createHmac } from 'crypto'
+import WebSocket from 'ws'
 
-// 代理地址配置（用于 API 调用）
+// 代理地址配置
 const PROXY_URL = '127.0.0.1:7897'
 
 let mainWindow: BrowserWindow | null = null
-let whisperPipeline: any = null
 
-// 初始化本地 Whisper 模型
-async function initWhisper() {
-  if (whisperPipeline) return whisperPipeline
-
-  console.log('Loading local Whisper model...')
-  const { pipeline } = await import('@xenova/transformers')
-
-  // 使用 base 模型，支持多语言
-  whisperPipeline = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
-    // 模型会自动下载到缓存目录
-  })
-
-  console.log('Whisper model loaded!')
-  return whisperPipeline
-}
-
-// 本地转录音频
-async function transcribeLocal(audioData: number[], language: string): Promise<{ ok: boolean; text?: string; error?: string }> {
-  try {
-    const transcriber = await initWhisper()
-
-    // 保存音频到临时文件
-    const tempDir = join(tmpdir(), 'voicevibe')
-    if (!existsSync(tempDir)) {
-      mkdirSync(tempDir, { recursive: true })
-    }
-    const tempFile = join(tempDir, `audio_${Date.now()}.webm`)
-    writeFileSync(tempFile, Buffer.from(audioData))
-
-    console.log('Transcribing audio locally...')
-    const result = await transcriber(tempFile, {
-      language: language === 'zh' ? 'chinese' : 'english',
-      task: 'transcribe',
-    })
-
-    // 删除临时文件
+// 讯飞语音识别 API
+async function transcribeWithXunfei(
+  audioData: number[],
+  appId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<{ ok: boolean; text?: string; error?: string }> {
+  return new Promise((resolve) => {
     try {
-      unlinkSync(tempFile)
-    } catch (e) {
-      // 忽略删除错误
-    }
+      // 生成鉴权 URL
+      const host = 'iat-api.xfyun.cn'
+      const path = '/v2/iat'
+      const date = new Date().toUTCString()
 
-    console.log('Transcription result:', result)
-    return { ok: true, text: result.text }
-  } catch (error) {
-    console.error('Local transcription error:', error)
-    return { ok: false, error: String(error) }
-  }
+      // 生成签名
+      const signatureOrigin = `host: ${host}\ndate: ${date}\nGET ${path} HTTP/1.1`
+      const signature = createHmac('sha256', apiSecret)
+        .update(signatureOrigin)
+        .digest('base64')
+
+      const authorizationOrigin = `api_key="${apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
+      const authorization = Buffer.from(authorizationOrigin).toString('base64')
+
+      const url = `wss://${host}${path}?authorization=${authorization}&date=${encodeURIComponent(date)}&host=${host}`
+
+      console.log('Connecting to Xunfei WebSocket...')
+
+      const ws = new WebSocket(url)
+      let fullText = ''
+      let hasError = false
+
+      ws.on('open', () => {
+        console.log('Xunfei WebSocket connected')
+
+        // 将音频数据转换为 base64
+        const audioBuffer = Buffer.from(audioData)
+        const audioBase64 = audioBuffer.toString('base64')
+
+        // 每帧发送的 base64 字符数（必须是 4 的倍数）
+        const charsPerFrame = 2560 // 约 1920 字节的音频数据
+
+        // 发送第一帧
+        const firstFrame = {
+          common: { app_id: appId },
+          business: {
+            language: 'zh_cn',
+            domain: 'iat',
+            accent: 'mandarin',
+            vad_eos: 3000,
+            dwa: 'wpgs',
+          },
+          data: {
+            status: 0,
+            format: 'audio/L16;rate=16000',
+            encoding: 'raw',
+            audio: audioBase64.slice(0, Math.min(charsPerFrame, audioBase64.length)),
+          },
+        }
+        ws.send(JSON.stringify(firstFrame))
+
+        // 发送中间帧和最后一帧
+        let offset = Math.min(charsPerFrame, audioBase64.length)
+        const sendNextFrame = () => {
+          if (offset >= audioBase64.length) {
+            // 发送最后一帧
+            const lastFrame = {
+              data: {
+                status: 2,
+                format: 'audio/L16;rate=16000',
+                encoding: 'raw',
+                audio: '',
+              },
+            }
+            ws.send(JSON.stringify(lastFrame))
+            return
+          }
+
+          const chunk = audioBase64.slice(offset, offset + charsPerFrame)
+          offset += charsPerFrame
+
+          const midFrame = {
+            data: {
+              status: 1,
+              format: 'audio/L16;rate=16000',
+              encoding: 'raw',
+              audio: chunk,
+            },
+          }
+          ws.send(JSON.stringify(midFrame))
+
+          // 控制发送速度，模拟实时音频流
+          setTimeout(sendNextFrame, 40)
+        }
+
+        setTimeout(sendNextFrame, 40)
+      })
+
+      ws.on('message', (data: WebSocket.Data) => {
+        try {
+          const result = JSON.parse(data.toString())
+          console.log('Xunfei response:', JSON.stringify(result).substring(0, 200))
+
+          if (result.code !== 0) {
+            hasError = true
+            ws.close()
+            resolve({ ok: false, error: `讯飞错误: ${result.code} - ${result.message}` })
+            return
+          }
+
+          // 解析识别结果
+          if (result.data && result.data.result) {
+            const ws_result = result.data.result.ws || []
+            for (const item of ws_result) {
+              const cw = item.cw || []
+              for (const word of cw) {
+                fullText += word.w || ''
+              }
+            }
+          }
+
+          // 检查是否结束
+          if (result.data && result.data.status === 2) {
+            ws.close()
+          }
+        } catch (e) {
+          console.error('Parse error:', e)
+        }
+      })
+
+      ws.on('close', () => {
+        console.log('Xunfei WebSocket closed, text:', fullText)
+        if (!hasError) {
+          resolve({ ok: true, text: fullText.trim() || '(未识别到语音)' })
+        }
+      })
+
+      ws.on('error', (err) => {
+        console.error('Xunfei WebSocket error:', err)
+        resolve({ ok: false, error: `WebSocket 错误: ${err.message}` })
+      })
+
+      // 超时处理
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close()
+          if (!hasError && !fullText) {
+            resolve({ ok: false, error: '识别超时' })
+          }
+        }
+      }, 30000)
+
+    } catch (error) {
+      console.error('Xunfei error:', error)
+      resolve({ ok: false, error: String(error) })
+    }
+  })
 }
 
 // API 调用函数（用于 ChatGPT API）
@@ -181,17 +288,12 @@ function registerGlobalShortcut() {
 }
 
 app.whenReady().then(async () => {
-  // 设置代理（用于 API 调用）
+  // 设置代理（用于渲染进程的网络请求）
   await session.defaultSession.setProxy({
     proxyRules: PROXY_URL,
     proxyBypassRules: 'localhost,127.0.0.1'
   })
   console.log('Proxy configured:', PROXY_URL)
-
-  // 预加载 Whisper 模型
-  initWhisper().catch(err => {
-    console.error('Failed to preload Whisper:', err)
-  })
 
   createWindow()
   registerGlobalShortcut()
@@ -227,13 +329,21 @@ ipcMain.handle('clipboard:write', (_event, text: string) => {
 
 ipcMain.handle('clipboard:read', () => clipboard.readText())
 
-// 本地语音转录（使用 Whisper）
+// 讯飞语音识别
 ipcMain.handle('whisper:transcribe', async (_event, args: {
   audioData: number[]
   language: string
+  appId: string
+  apiKey: string
+  apiSecret: string
 }) => {
-  console.log('Received transcribe request, audio size:', args.audioData.length)
-  return await transcribeLocal(args.audioData, args.language)
+  console.log('Received transcribe request, audio size:', args.audioData.length, 'bytes')
+  return await transcribeWithXunfei(
+    args.audioData,
+    args.appId,
+    args.apiKey,
+    args.apiSecret
+  )
 })
 
 // ChatGPT API（用于优化 Prompt）

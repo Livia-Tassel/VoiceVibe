@@ -23,9 +23,7 @@ export default defineConfig({
                 'node-fetch',
                 'form-data',
                 'https-proxy-agent',
-                '@xenova/transformers',
-                'onnxruntime-node',
-                'sharp',
+                'ws',
               ],
               output: {
                 entryFileNames: '[name].cjs'
