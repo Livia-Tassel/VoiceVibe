@@ -73,6 +73,24 @@ export function SpeechInput({
           placeholder="点击麦克风按钮或按空格键开始/停止录音，或直接输入文字..."
           className="w-full h-full p-4 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-sm leading-relaxed"
         />
+        {!transcript && !interimTranscript && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-4 text-gray-400">
+            <div className="text-sm font-medium text-gray-300">从一句话开始，让 AI 帮你完善</div>
+            <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+              {['会议纪要', '营销文案', '产品需求', '用户访谈', '项目复盘'].map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-vibe-border/70 bg-vibe-dark/40 px-3 py-1"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            <div className="text-xs text-gray-500">
+              支持语音输入或直接粘贴原始想法，后续将自动结构化。
+            </div>
+          </div>
+        )}
         {interimTranscript && (
           <div className="absolute bottom-24 left-4 right-4 text-blue-400 text-sm font-medium bg-vibe-dark/90 backdrop-blur-sm px-4 py-2.5 rounded-lg border border-blue-500/30 shadow-lg shadow-blue-500/10">
             <div className="flex items-center gap-2">

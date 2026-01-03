@@ -1,5 +1,6 @@
 import { Copy, Sparkles, Loader2, Trash2, Check } from 'lucide-react'
 import { useState } from 'react'
+import brandOrbit from '../../assets/brand-orbit.svg'
 
 interface PromptOutputProps {
   content: string
@@ -23,6 +24,8 @@ export function PromptOutput({
   hasInput,
 }: PromptOutputProps) {
   const [copied, setCopied] = useState(false)
+  const sampleOutput =
+    '你是一位资深品牌策略专家。请将以下会议要点整理为一份结构化营销方案，包括目标受众、核心卖点、传播渠道与执行节奏，并提供 3 条可直接使用的广告语。'
 
   const handleCopy = () => {
     onCopy()
@@ -84,13 +87,38 @@ export function PromptOutput({
             </div>
           </div>
         ) : (
-          <textarea
-            id="output-textarea"
-            value={content}
-            onChange={(e) => onContentChange(e.target.value)}
-            placeholder="优化后的结构化 Prompt 将显示在这里..."
-            className="w-full h-full p-4 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-sm leading-relaxed"
-          />
+          <div className="relative h-full">
+            <textarea
+              id="output-textarea"
+              value={content}
+              onChange={(e) => onContentChange(e.target.value)}
+              placeholder="优化后的结构化 Prompt 将显示在这里..."
+              className="w-full h-full p-4 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-sm leading-relaxed"
+            />
+            {!content && (
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-[28px] bg-gradient-to-br from-indigo-500/30 via-purple-500/20 to-pink-500/30 blur-xl" />
+                  <div className="relative flex items-center justify-center rounded-[28px] border border-vibe-border/60 bg-vibe-dark/70 p-6 shadow-2xl shadow-indigo-500/20">
+                    <img src={brandOrbit} alt="品牌视觉" className="h-40 w-48" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-gray-200">示例优化结果</div>
+                  <p className="text-xs text-gray-500">
+                    我们将把你的原始想法整理成结构化 Prompt，方便直接投入使用。
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onContentChange(sampleOutput)}
+                  className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-xs font-medium text-indigo-200 transition hover:bg-indigo-500/20"
+                >
+                  插入示例优化结果
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

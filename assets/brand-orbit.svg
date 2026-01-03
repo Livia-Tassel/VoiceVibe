@@ -1,0 +1,21 @@
+<svg width="320" height="260" viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="orbitGradient" x1="40" y1="20" x2="280" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1" />
+      <stop offset="0.5" stop-color="#A855F7" />
+      <stop offset="1" stop-color="#EC4899" />
+    </linearGradient>
+    <radialGradient id="coreGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 130) scale(70)">
+      <stop stop-color="#C4B5FD" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#312E81" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="320" height="260" rx="32" fill="#0F172A" fill-opacity="0.4" />
+  <circle cx="160" cy="130" r="70" fill="url(#coreGlow)" />
+  <circle cx="160" cy="130" r="56" stroke="url(#orbitGradient)" stroke-width="2.5" stroke-dasharray="6 10" />
+  <circle cx="160" cy="130" r="92" stroke="url(#orbitGradient)" stroke-opacity="0.45" stroke-width="2" />
+  <circle cx="232" cy="94" r="6" fill="#F472B6" />
+  <circle cx="98" cy="178" r="5" fill="#A855F7" />
+  <circle cx="210" cy="172" r="4" fill="#818CF8" />
+  <path d="M160 96L168 114L188 118L172 132L176 152L160 142L144 152L148 132L132 118L152 114Z" fill="#E0E7FF" fill-opacity="0.9" />
+</svg>
