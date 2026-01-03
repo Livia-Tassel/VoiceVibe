@@ -205,36 +205,40 @@ function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-vibe-dark overflow-hidden rounded-xl">
+    <div className="min-h-screen flex flex-col app-background text-white">
       <Header status={status} onSettingsClick={() => setIsSettingsOpen(true)} />
 
-      <main className="flex-1 grid grid-cols-2 divide-x divide-vibe-border overflow-hidden">
-        {/* Left Panel - Input */}
-        <div className="bg-vibe-dark overflow-hidden">
-          <SpeechInput
-            transcript={transcript}
-            interimTranscript={isTranscribing ? '正在转录...' : (isRecording ? '正在录音...' : '')}
-            isListening={isRecording}
-            isSupported={true}
-            onTranscriptChange={setTranscript}
-            onStartListening={handleStartRecording}
-            onStopListening={handleStopRecording}
-            onClear={handleClearInput}
-          />
-        </div>
+      <main className="flex-1 overflow-hidden">
+        <div className="mx-auto h-full w-full max-w-[1200px] px-8 py-6">
+          <div className="grid h-full grid-cols-2 gap-6">
+            {/* Left Panel - Input */}
+            <div className="rounded-2xl border border-vibe-border/60 bg-gradient-to-b from-vibe-dark/90 via-vibe-dark/80 to-vibe-gray/30 shadow-2xl overflow-hidden">
+              <SpeechInput
+                transcript={transcript}
+                interimTranscript={isTranscribing ? '正在转录...' : (isRecording ? '正在录音...' : '')}
+                isListening={isRecording}
+                isSupported={true}
+                onTranscriptChange={setTranscript}
+                onStartListening={handleStartRecording}
+                onStopListening={handleStopRecording}
+                onClear={handleClearInput}
+              />
+            </div>
 
-        {/* Right Panel - Output */}
-        <div className="bg-vibe-gray/30 overflow-hidden">
-          <PromptOutput
-            content={refinedPrompt}
-            isLoading={isRefining || isTranscribing}
-            error={error}
-            onContentChange={setRefinedPrompt}
-            onCopy={() => copyToClipboard()}
-            onRefine={handleRefine}
-            onClear={handleClearOutput}
-            hasInput={transcript.trim().length > 0}
-          />
+            {/* Right Panel - Output */}
+            <div className="rounded-2xl border border-vibe-border/60 bg-gradient-to-b from-vibe-dark/90 via-vibe-dark/80 to-vibe-gray/30 shadow-2xl overflow-hidden">
+              <PromptOutput
+                content={refinedPrompt}
+                isLoading={isRefining || isTranscribing}
+                error={error}
+                onContentChange={setRefinedPrompt}
+                onCopy={() => copyToClipboard()}
+                onRefine={handleRefine}
+                onClear={handleClearOutput}
+                hasInput={transcript.trim().length > 0}
+              />
+            </div>
+          </div>
         </div>
       </main>
 
