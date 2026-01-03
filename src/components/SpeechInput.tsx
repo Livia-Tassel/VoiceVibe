@@ -70,7 +70,7 @@ export function SpeechInput({
           id="input-textarea"
           value={transcript}
           onChange={(e) => onTranscriptChange(e.target.value)}
-          placeholder="点击麦克风按钮或按空格键开始录音，或直接输入文字..."
+          placeholder="点击麦克风按钮或按空格键开始/停止录音，或直接输入文字..."
           className="w-full h-full p-4 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-sm leading-relaxed"
         />
         {interimTranscript && (
