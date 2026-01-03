@@ -46,11 +46,11 @@ cd voicevibe
 # 安装依赖
 npm install
 
-# 开发模式
-npm run dev
+# 开发模式（Electron）
+npm run electron:dev
 
 # 构建安装包
-npm run build
+npm run build:mac
 ```
 
 ## 配置
@@ -122,8 +122,8 @@ npm run build
 # 安装依赖
 npm install
 
-# 启动开发服务器
-npm run dev
+# 启动开发模式（Electron）
+npm run electron:dev
 
 # 类型检查
 npm run typecheck
