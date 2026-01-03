@@ -239,10 +239,15 @@ function createWindow() {
 
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
-  const url = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173'
-  console.log('Loading URL:', url)
-
-  mainWindow.loadURL(url)
+  const devServerUrl = process.env.VITE_DEV_SERVER_URL
+  if (devServerUrl) {
+    console.log('Loading URL:', devServerUrl)
+    mainWindow.loadURL(devServerUrl)
+  } else {
+    const indexPath = join(__dirname, '../dist/index.html')
+    console.log('Loading file:', indexPath)
+    mainWindow.loadFile(indexPath)
+  }
 
   // 开发时打开 DevTools
   if (process.env.VITE_DEV_SERVER_URL) {
