@@ -19,13 +19,13 @@ export function Header({ status, onSettingsClick }: HeaderProps) {
 
   return (
     <header
-      className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-vibe-gray/90 to-vibe-gray/70 border-b border-vibe-border backdrop-blur-sm"
+      className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-vibe-800/90 to-vibe-700/70 border-b border-vibe-600 backdrop-blur-sm"
       style={{ WebkitAppRegion: 'drag', paddingLeft: '80px' } as React.CSSProperties}
     >
       {/* Logo */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30">
+          <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-radius-lg shadow-soft shadow-indigo-500/30">
             <Mic size={18} className="text-white" />
           </div>
           {isActive && (
@@ -33,15 +33,15 @@ export function Header({ status, onSettingsClick }: HeaderProps) {
           )}
         </div>
         <div className="flex flex-col">
-          <span className="text-lg font-bold text-white tracking-tight">VoiceVibe</span>
-          <span className="text-[10px] text-gray-500 -mt-0.5">语音转 Prompt</span>
+          <span className="text-title text-white">VoiceVibe</span>
+          <span className="text-subtitle text-vibe-300 -mt-0.5">语音转 Prompt</span>
         </div>
       </div>
 
       {/* Status Indicator */}
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-vibe-dark/50 transition-all duration-300 ${isActive ? glow : ''}`}>
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-vibe-900/60 transition-all duration-300 ${isActive ? glow : ''}`}>
         <span className={`w-2 h-2 rounded-full ${color} ${isActive ? 'animate-pulse' : ''}`} />
-        <span className="text-xs font-medium text-gray-300">{text}</span>
+        <span className="text-body text-vibe-200">{text}</span>
       </div>
 
       {/* Settings */}
@@ -51,7 +51,7 @@ export function Header({ status, onSettingsClick }: HeaderProps) {
       >
         <button
           onClick={onSettingsClick}
-          className="p-2 rounded-lg hover:bg-vibe-light/80 transition-all duration-200 text-gray-400 hover:text-white hover:scale-105"
+          className="p-2 rounded-radius-lg hover:bg-vibe-600/80 transition-all duration-200 text-vibe-300 hover:text-white hover:scale-105"
           title="设置"
         >
           <Settings size={18} />

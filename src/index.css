@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .text-title {
+    @apply text-lg font-semibold tracking-tight;
+  }
+
+  .text-subtitle {
+    @apply text-sm font-medium;
+  }
+
+  .text-body {
+    @apply text-sm leading-relaxed;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;

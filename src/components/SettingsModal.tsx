@@ -73,13 +73,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-vibe-gray border border-vibe-border rounded-xl shadow-2xl w-[520px] max-h-[85vh] overflow-hidden">
+      <div className="relative bg-vibe-800 border border-vibe-600 rounded-radius-xl shadow-card w-[520px] max-h-[85vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-vibe-border">
-          <h2 className="text-lg font-semibold text-white">设置</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-vibe-600">
+          <h2 className="text-title text-white">设置</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-vibe-light transition-colors text-gray-400 hover:text-white"
+            className="p-1 rounded-radius-lg hover:bg-vibe-600 transition-colors text-vibe-300 hover:text-white"
           >
             <X size={20} />
           </button>
@@ -90,7 +90,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {/* Speech API Settings Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">语音识别 API（讯飞）</h3>
+              <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide">语音识别 API（讯飞）</h3>
               <a
                 href="https://console.xfyun.cn/services/iat"
                 target="_blank"
@@ -103,72 +103,72 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
             {/* AppID */}
             <div className="space-y-1.5">
-              <label className="block text-sm text-gray-400">AppID</label>
+              <label className="block text-body text-vibe-300">AppID</label>
               <input
                 type="text"
                 value={settings.speechAppId}
                 onChange={(e) => setSettings(prev => ({ ...prev, speechAppId: e.target.value }))}
                 placeholder="12345678"
-                className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
               />
             </div>
 
             {/* APIKey & APISecret */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">APIKey</label>
+                <label className="block text-body text-vibe-300">APIKey</label>
                 <div className="relative">
                   <input
                     type={showSpeechApiKey ? 'text' : 'password'}
                     value={settings.speechApiKey}
                     onChange={(e) => setSettings(prev => ({ ...prev, speechApiKey: e.target.value }))}
                     placeholder="xxxxxxxx"
-                    className="w-full px-3 py-2 pr-10 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                    className="w-full px-3 py-2 pr-10 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                   />
                   <button
                     type="button"
                     onClick={() => setShowSpeechApiKey(!showSpeechApiKey)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-vibe-300 hover:text-white"
                   >
                     {showSpeechApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">APISecret</label>
+                <label className="block text-body text-vibe-300">APISecret</label>
                 <input
                   type="password"
                   value={settings.speechApiSecret}
                   onChange={(e) => setSettings(prev => ({ ...prev, speechApiSecret: e.target.value }))}
                   placeholder="xxxxxxxx"
-                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
               </div>
             </div>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-vibe-border" />
+          <div className="border-t border-vibe-600" />
 
           {/* Prompt API Settings Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Prompt 优化 API</h3>
+            <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide">Prompt 优化 API</h3>
 
             {/* API Key */}
             <div className="space-y-1.5">
-              <label className="block text-sm text-gray-400">API Key</label>
+              <label className="block text-body text-vibe-300">API Key</label>
               <div className="relative">
                 <input
                   type={showApiKey ? 'text' : 'password'}
                   value={settings.apiKey}
                   onChange={(e) => setSettings(prev => ({ ...prev, apiKey: e.target.value }))}
                   placeholder="sk-..."
-                  className="w-full px-3 py-2 pr-10 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 pr-10 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-vibe-300 hover:text-white"
                 >
                   {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -178,54 +178,54 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {/* API Base URL & Model */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">API 地址</label>
+                <label className="block text-body text-vibe-300">API 地址</label>
                 <input
                   type="text"
                   value={settings.apiBaseUrl}
                   onChange={(e) => setSettings(prev => ({ ...prev, apiBaseUrl: e.target.value }))}
                   placeholder="https://api.openai.com"
-                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">模型</label>
+                <label className="block text-body text-vibe-300">模型</label>
                 <input
                   type="text"
                   value={settings.chatModel}
                   onChange={(e) => setSettings(prev => ({ ...prev, chatModel: e.target.value }))}
                   placeholder="gpt-4o-mini"
-                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
               </div>
             </div>
 
             {/* Proxy */}
             <div className="space-y-1.5">
-              <label className="block text-sm text-gray-400">代理地址（可选）</label>
+              <label className="block text-body text-vibe-300">代理地址（可选）</label>
               <input
                 type="text"
                 value={settings.proxyUrl}
                 onChange={(e) => setSettings(prev => ({ ...prev, proxyUrl: e.target.value }))}
                 placeholder="http://127.0.0.1:7890"
-                className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
               />
             </div>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-vibe-border" />
+          <div className="border-t border-vibe-600" />
 
           {/* Preferences Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">偏好设置</h3>
+            <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide">偏好设置</h3>
 
             {/* Auto Copy */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">优化后自动复制到剪贴板</span>
+              <span className="text-body text-vibe-300">优化后自动复制到剪贴板</span>
               <button
                 onClick={() => setSettings(prev => ({ ...prev, autoCopy: !prev.autoCopy }))}
                 className={`relative w-10 h-5 rounded-full transition-colors ${
-                  settings.autoCopy ? 'bg-vibe-accent' : 'bg-vibe-light'
+                  settings.autoCopy ? 'bg-vibe-accent' : 'bg-vibe-600'
                 }`}
               >
                 <span
@@ -238,50 +238,50 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-vibe-border" />
+          <div className="border-t border-vibe-600" />
 
           {/* Shortcuts Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide flex items-center gap-2">
+            <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide flex items-center gap-2">
               <Keyboard size={14} />
               快捷键
             </h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">显示/隐藏窗口</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">⌥⌘P</kbd>
+            <div className="grid grid-cols-2 gap-2 text-body">
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">显示/隐藏窗口</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">⌥⌘P</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">优化 Prompt</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">⌥⌘T</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">优化 Prompt</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">⌥⌘T</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">聚焦输入框</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">/</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">聚焦输入框</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">/</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">聚焦输出框</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">?</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">聚焦输出框</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">?</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg col-span-2">
-                <span className="text-gray-400">开始/停止录音</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">Space</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg col-span-2">
+                <span className="text-vibe-300">开始/停止录音</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">Space</kbd>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-vibe-border">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-vibe-600">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-body text-vibe-300 hover:text-white transition-colors"
           >
             取消
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium bg-vibe-accent hover:bg-vibe-accent/80 text-white rounded-lg transition-colors"
+            className="px-4 py-2 text-subtitle bg-vibe-accent hover:bg-vibe-accent/80 text-white rounded-radius-lg transition-colors"
           >
             保存
           </button>
