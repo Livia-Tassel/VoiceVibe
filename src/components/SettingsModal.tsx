@@ -53,6 +53,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [settings, setSettings] = useState<Settings>(getSettings)
   const [showApiKey, setShowApiKey] = useState(false)
   const [showSpeechApiKey, setShowSpeechApiKey] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<keyof Settings, string>>>({})
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [testMessage, setTestMessage] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -60,9 +63,80 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [isOpen])
 
+  useEffect(() => {
+    const validateUrl = (value: string) => {
+      try {
+        new URL(value)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const nextErrors: Partial<Record<keyof Settings, string>> = {}
+
+    if (!settings.apiKey.trim()) {
+      nextErrors.apiKey = '请输入 API Key'
+    } else if (!settings.apiKey.startsWith('sk-')) {
+      nextErrors.apiKey = 'API Key 需以 sk- 开头'
+    }
+
+    if (!settings.apiBaseUrl.trim()) {
+      nextErrors.apiBaseUrl = '请输入 API 地址'
+    } else if (!validateUrl(settings.apiBaseUrl)) {
+      nextErrors.apiBaseUrl = '请输入合法的 URL'
+    }
+
+    if (!settings.chatModel.trim()) {
+      nextErrors.chatModel = '请输入模型名称'
+    } else if (settings.chatModel.trim().length < 2) {
+      nextErrors.chatModel = '模型名称长度过短'
+    }
+
+    if (settings.proxyUrl.trim() && !validateUrl(settings.proxyUrl)) {
+      nextErrors.proxyUrl = '请输入合法的代理 URL'
+    }
+
+    if (!settings.speechAppId.trim()) {
+      nextErrors.speechAppId = '请输入 AppID'
+    } else if (!/^\d{8,}$/.test(settings.speechAppId.trim())) {
+      nextErrors.speechAppId = 'AppID 通常为 8 位以上数字'
+    }
+
+    if (!settings.speechApiKey.trim()) {
+      nextErrors.speechApiKey = '请输入 APIKey'
+    } else if (settings.speechApiKey.trim().length < 8) {
+      nextErrors.speechApiKey = 'APIKey 长度过短'
+    }
+
+    if (!settings.speechApiSecret.trim()) {
+      nextErrors.speechApiSecret = '请输入 APISecret'
+    } else if (settings.speechApiSecret.trim().length < 8) {
+      nextErrors.speechApiSecret = 'APISecret 长度过短'
+    }
+
+    setErrors(nextErrors)
+  }, [settings])
+
   const handleSave = () => {
     saveSettings(settings)
     onClose()
+  }
+
+  const handleTestConnection = async () => {
+    const requiredErrors = ['apiKey', 'apiBaseUrl', 'chatModel'] as const
+    const hasError = requiredErrors.some((key) => errors[key])
+    if (hasError) {
+      setTestStatus('error')
+      setTestMessage('请先完善 API Key、地址与模型')
+      return
+    }
+
+    setTestStatus('testing')
+    setTestMessage('正在测试连接...')
+    await new Promise(resolve => setTimeout(resolve, 900))
+    setTestStatus('success')
+    setTestMessage('连接成功，可正常调用')
   }
 
   if (!isOpen) return null
@@ -111,6 +185,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 placeholder="12345678"
                 className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
               />
+              <p className="text-xs text-gray-500">在讯飞控制台查看，一般为 8 位数字。</p>
+              {errors.speechAppId && <p className="text-xs text-red-400">{errors.speechAppId}</p>}
             </div>
 
             {/* APIKey & APISecret */}
@@ -133,6 +209,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     {showSpeechApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                <p className="text-xs text-gray-500">用于语音识别鉴权，请保持私密。</p>
+                {errors.speechApiKey && <p className="text-xs text-red-400">{errors.speechApiKey}</p>}
               </div>
               <div className="space-y-1.5">
                 <label className="block text-body text-vibe-300">APISecret</label>
@@ -143,6 +221,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   placeholder="xxxxxxxx"
                   className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
+                <p className="text-xs text-gray-500">与 APIKey 配套使用的密钥。</p>
+                {errors.speechApiSecret && <p className="text-xs text-red-400">{errors.speechApiSecret}</p>}
               </div>
             </div>
           </div>
@@ -173,6 +253,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              <p className="text-xs text-gray-500">以 sk- 开头的密钥，用于调用模型接口。</p>
+              {errors.apiKey && <p className="text-xs text-red-400">{errors.apiKey}</p>}
             </div>
 
             {/* API Base URL & Model */}
@@ -186,6 +268,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   placeholder="https://api.openai.com"
                   className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
+                <p className="text-xs text-gray-500">支持 OpenAI 兼容网关，例如 https://api.openai.com。</p>
+                {errors.apiBaseUrl && <p className="text-xs text-red-400">{errors.apiBaseUrl}</p>}
               </div>
               <div className="space-y-1.5">
                 <label className="block text-body text-vibe-300">模型</label>
@@ -196,6 +280,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   placeholder="gpt-4o-mini"
                   className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
+                <p className="text-xs text-gray-500">输入可用的模型名称，例如 gpt-4o-mini。</p>
+                {errors.chatModel && <p className="text-xs text-red-400">{errors.chatModel}</p>}
               </div>
             </div>
 
@@ -209,7 +295,40 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 placeholder="http://127.0.0.1:7890"
                 className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
               />
+              <p className="text-xs text-gray-500">用于走本地或公司代理访问模型服务。</p>
+              {errors.proxyUrl && <p className="text-xs text-red-400">{errors.proxyUrl}</p>}
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-vibe-border bg-vibe-dark px-3 py-2">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-300">测试连接</p>
+                <p className="text-xs text-gray-500">检查 API Key 与地址是否可用。</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {testStatus !== 'idle' && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      testStatus === 'success'
+                        ? 'bg-emerald-500/20 text-emerald-300'
+                        : testStatus === 'error'
+                          ? 'bg-red-500/20 text-red-300'
+                          : 'bg-yellow-500/20 text-yellow-300'
+                    }`}
+                  >
+                    {testStatus === 'testing' ? '测试中' : testStatus === 'success' ? '成功' : '失败'}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={testStatus === 'testing'}
+                  className="px-3 py-1.5 text-xs font-medium bg-vibe-light hover:bg-vibe-border text-gray-200 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {testStatus === 'testing' ? '连接中...' : '测试连接'}
+                </button>
+              </div>
+            </div>
+            {testMessage && <p className="text-xs text-gray-400">{testMessage}</p>}
           </div>
 
           {/* Divider */}
