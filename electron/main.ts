@@ -3,8 +3,40 @@ import { join } from 'path'
 import { createHmac } from 'crypto'
 import WebSocket from 'ws'
 
-// 代理地址配置
-const PROXY_URL = '127.0.0.1:7897'
+// 代理地址配置（从环境变量读取）
+function resolveProxyRules(rawValue?: string): string | undefined {
+  if (!rawValue) {
+    return undefined
+  }
+
+  const trimmed = rawValue.trim()
+  if (!trimmed) {
+    return undefined
+  }
+
+  if (/\s/.test(trimmed)) {
+    return undefined
+  }
+
+  if (trimmed.includes('://')) {
+    try {
+      const url = new URL(trimmed)
+      if (!url.hostname) {
+        return undefined
+      }
+      return trimmed
+    } catch (error) {
+      console.warn('Invalid proxy URL:', trimmed, error)
+      return undefined
+    }
+  }
+
+  if (/^[^:]+:\d+$/.test(trimmed)) {
+    return trimmed
+  }
+
+  return trimmed
+}
 
 let mainWindow: BrowserWindow | null = null
 
@@ -289,11 +321,16 @@ function registerGlobalShortcut() {
 
 app.whenReady().then(async () => {
   // 设置代理（用于渲染进程的网络请求）
-  await session.defaultSession.setProxy({
-    proxyRules: PROXY_URL,
-    proxyBypassRules: 'localhost,127.0.0.1'
-  })
-  console.log('Proxy configured:', PROXY_URL)
+  const proxyRules = resolveProxyRules(process.env.PROXY_URL)
+  if (proxyRules) {
+    await session.defaultSession.setProxy({
+      proxyRules,
+      proxyBypassRules: 'localhost,127.0.0.1',
+    })
+    console.log('Proxy configured:', proxyRules)
+  } else {
+    console.log('Proxy not configured, skipping setProxy.')
+  }
 
   createWindow()
   registerGlobalShortcut()
