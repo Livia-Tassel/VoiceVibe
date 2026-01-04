@@ -20,10 +20,6 @@ export default defineConfig({
             rollupOptions: {
               external: [
                 'electron',
-                'node-fetch',
-                'form-data',
-                'https-proxy-agent',
-                'ws',
               ],
               output: {
                 entryFileNames: '[name].cjs'
