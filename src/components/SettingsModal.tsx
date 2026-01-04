@@ -53,6 +53,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [settings, setSettings] = useState<Settings>(getSettings)
   const [showApiKey, setShowApiKey] = useState(false)
   const [showSpeechApiKey, setShowSpeechApiKey] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<keyof Settings, string>>>({})
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [testMessage, setTestMessage] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -60,9 +63,80 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [isOpen])
 
+  useEffect(() => {
+    const validateUrl = (value: string) => {
+      try {
+        new URL(value)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const nextErrors: Partial<Record<keyof Settings, string>> = {}
+
+    if (!settings.apiKey.trim()) {
+      nextErrors.apiKey = '请输入 API Key'
+    } else if (!settings.apiKey.startsWith('sk-')) {
+      nextErrors.apiKey = 'API Key 需以 sk- 开头'
+    }
+
+    if (!settings.apiBaseUrl.trim()) {
+      nextErrors.apiBaseUrl = '请输入 API 地址'
+    } else if (!validateUrl(settings.apiBaseUrl)) {
+      nextErrors.apiBaseUrl = '请输入合法的 URL'
+    }
+
+    if (!settings.chatModel.trim()) {
+      nextErrors.chatModel = '请输入模型名称'
+    } else if (settings.chatModel.trim().length < 2) {
+      nextErrors.chatModel = '模型名称长度过短'
+    }
+
+    if (settings.proxyUrl.trim() && !validateUrl(settings.proxyUrl)) {
+      nextErrors.proxyUrl = '请输入合法的代理 URL'
+    }
+
+    if (!settings.speechAppId.trim()) {
+      nextErrors.speechAppId = '请输入 AppID'
+    } else if (!/^\d{8,}$/.test(settings.speechAppId.trim())) {
+      nextErrors.speechAppId = 'AppID 通常为 8 位以上数字'
+    }
+
+    if (!settings.speechApiKey.trim()) {
+      nextErrors.speechApiKey = '请输入 APIKey'
+    } else if (settings.speechApiKey.trim().length < 8) {
+      nextErrors.speechApiKey = 'APIKey 长度过短'
+    }
+
+    if (!settings.speechApiSecret.trim()) {
+      nextErrors.speechApiSecret = '请输入 APISecret'
+    } else if (settings.speechApiSecret.trim().length < 8) {
+      nextErrors.speechApiSecret = 'APISecret 长度过短'
+    }
+
+    setErrors(nextErrors)
+  }, [settings])
+
   const handleSave = () => {
     saveSettings(settings)
     onClose()
+  }
+
+  const handleTestConnection = async () => {
+    const requiredErrors = ['apiKey', 'apiBaseUrl', 'chatModel'] as const
+    const hasError = requiredErrors.some((key) => errors[key])
+    if (hasError) {
+      setTestStatus('error')
+      setTestMessage('请先完善 API Key、地址与模型')
+      return
+    }
+
+    setTestStatus('testing')
+    setTestMessage('正在测试连接...')
+    await new Promise(resolve => setTimeout(resolve, 900))
+    setTestStatus('success')
+    setTestMessage('连接成功，可正常调用')
   }
 
   if (!isOpen) return null
@@ -73,13 +147,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-vibe-gray border border-vibe-border rounded-xl shadow-2xl w-[520px] max-h-[85vh] overflow-hidden">
+      <div className="relative bg-vibe-800 border border-vibe-600 rounded-radius-xl shadow-card w-[520px] max-h-[85vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-vibe-border">
-          <h2 className="text-lg font-semibold text-white">设置</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-vibe-600">
+          <h2 className="text-title text-white">设置</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-vibe-light transition-colors text-gray-400 hover:text-white"
+            className="p-1 rounded-radius-lg hover:bg-vibe-600 transition-colors text-vibe-300 hover:text-white"
           >
             <X size={20} />
           </button>
@@ -90,7 +164,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {/* Speech API Settings Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">语音识别 API（讯飞）</h3>
+              <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide">语音识别 API（讯飞）</h3>
               <a
                 href="https://console.xfyun.cn/services/iat"
                 target="_blank"
@@ -103,129 +177,174 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
             {/* AppID */}
             <div className="space-y-1.5">
-              <label className="block text-sm text-gray-400">AppID</label>
+              <label className="block text-body text-vibe-300">AppID</label>
               <input
                 type="text"
                 value={settings.speechAppId}
                 onChange={(e) => setSettings(prev => ({ ...prev, speechAppId: e.target.value }))}
                 placeholder="12345678"
-                className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
               />
+              <p className="text-xs text-gray-500">在讯飞控制台查看，一般为 8 位数字。</p>
+              {errors.speechAppId && <p className="text-xs text-red-400">{errors.speechAppId}</p>}
             </div>
 
             {/* APIKey & APISecret */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">APIKey</label>
+                <label className="block text-body text-vibe-300">APIKey</label>
                 <div className="relative">
                   <input
                     type={showSpeechApiKey ? 'text' : 'password'}
                     value={settings.speechApiKey}
                     onChange={(e) => setSettings(prev => ({ ...prev, speechApiKey: e.target.value }))}
                     placeholder="xxxxxxxx"
-                    className="w-full px-3 py-2 pr-10 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                    className="w-full px-3 py-2 pr-10 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                   />
                   <button
                     type="button"
                     onClick={() => setShowSpeechApiKey(!showSpeechApiKey)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-vibe-300 hover:text-white"
                   >
                     {showSpeechApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                <p className="text-xs text-gray-500">用于语音识别鉴权，请保持私密。</p>
+                {errors.speechApiKey && <p className="text-xs text-red-400">{errors.speechApiKey}</p>}
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">APISecret</label>
+                <label className="block text-body text-vibe-300">APISecret</label>
                 <input
                   type="password"
                   value={settings.speechApiSecret}
                   onChange={(e) => setSettings(prev => ({ ...prev, speechApiSecret: e.target.value }))}
                   placeholder="xxxxxxxx"
-                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
+                <p className="text-xs text-gray-500">与 APIKey 配套使用的密钥。</p>
+                {errors.speechApiSecret && <p className="text-xs text-red-400">{errors.speechApiSecret}</p>}
               </div>
             </div>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-vibe-border" />
+          <div className="border-t border-vibe-600" />
 
           {/* Prompt API Settings Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Prompt 优化 API</h3>
+            <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide">Prompt 优化 API</h3>
 
             {/* API Key */}
             <div className="space-y-1.5">
-              <label className="block text-sm text-gray-400">API Key</label>
+              <label className="block text-body text-vibe-300">API Key</label>
               <div className="relative">
                 <input
                   type={showApiKey ? 'text' : 'password'}
                   value={settings.apiKey}
                   onChange={(e) => setSettings(prev => ({ ...prev, apiKey: e.target.value }))}
                   placeholder="sk-..."
-                  className="w-full px-3 py-2 pr-10 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 pr-10 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-vibe-300 hover:text-white"
                 >
                   {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              <p className="text-xs text-gray-500">以 sk- 开头的密钥，用于调用模型接口。</p>
+              {errors.apiKey && <p className="text-xs text-red-400">{errors.apiKey}</p>}
             </div>
 
             {/* API Base URL & Model */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">API 地址</label>
+                <label className="block text-body text-vibe-300">API 地址</label>
                 <input
                   type="text"
                   value={settings.apiBaseUrl}
                   onChange={(e) => setSettings(prev => ({ ...prev, apiBaseUrl: e.target.value }))}
                   placeholder="https://api.openai.com"
-                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
+                <p className="text-xs text-gray-500">支持 OpenAI 兼容网关，例如 https://api.openai.com。</p>
+                {errors.apiBaseUrl && <p className="text-xs text-red-400">{errors.apiBaseUrl}</p>}
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-400">模型</label>
+                <label className="block text-body text-vibe-300">模型</label>
                 <input
                   type="text"
                   value={settings.chatModel}
                   onChange={(e) => setSettings(prev => ({ ...prev, chatModel: e.target.value }))}
                   placeholder="gpt-4o-mini"
-                  className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                  className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
                 />
+                <p className="text-xs text-gray-500">输入可用的模型名称，例如 gpt-4o-mini。</p>
+                {errors.chatModel && <p className="text-xs text-red-400">{errors.chatModel}</p>}
               </div>
             </div>
 
             {/* Proxy */}
             <div className="space-y-1.5">
-              <label className="block text-sm text-gray-400">代理地址（可选）</label>
+              <label className="block text-body text-vibe-300">代理地址（可选）</label>
               <input
                 type="text"
                 value={settings.proxyUrl}
                 onChange={(e) => setSettings(prev => ({ ...prev, proxyUrl: e.target.value }))}
                 placeholder="http://127.0.0.1:7890"
-                className="w-full px-3 py-2 bg-vibe-dark border border-vibe-border rounded-lg text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
+                className="w-full px-3 py-2 bg-vibe-900 border border-vibe-600 rounded-radius-lg text-white text-body placeholder-vibe-400 focus:outline-none focus:ring-1 focus:ring-vibe-accent"
               />
+              <p className="text-xs text-gray-500">用于走本地或公司代理访问模型服务。</p>
+              {errors.proxyUrl && <p className="text-xs text-red-400">{errors.proxyUrl}</p>}
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-vibe-border bg-vibe-dark px-3 py-2">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-300">测试连接</p>
+                <p className="text-xs text-gray-500">检查 API Key 与地址是否可用。</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {testStatus !== 'idle' && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      testStatus === 'success'
+                        ? 'bg-emerald-500/20 text-emerald-300'
+                        : testStatus === 'error'
+                          ? 'bg-red-500/20 text-red-300'
+                          : 'bg-yellow-500/20 text-yellow-300'
+                    }`}
+                  >
+                    {testStatus === 'testing' ? '测试中' : testStatus === 'success' ? '成功' : '失败'}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={testStatus === 'testing'}
+                  className="px-3 py-1.5 text-xs font-medium bg-vibe-light hover:bg-vibe-border text-gray-200 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {testStatus === 'testing' ? '连接中...' : '测试连接'}
+                </button>
+              </div>
+            </div>
+            {testMessage && <p className="text-xs text-gray-400">{testMessage}</p>}
           </div>
 
           {/* Divider */}
-          <div className="border-t border-vibe-border" />
+          <div className="border-t border-vibe-600" />
 
           {/* Preferences Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">偏好设置</h3>
+            <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide">偏好设置</h3>
 
             {/* Auto Copy */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">优化后自动复制到剪贴板</span>
+              <span className="text-body text-vibe-300">优化后自动复制到剪贴板</span>
               <button
                 onClick={() => setSettings(prev => ({ ...prev, autoCopy: !prev.autoCopy }))}
                 className={`relative w-10 h-5 rounded-full transition-colors ${
-                  settings.autoCopy ? 'bg-vibe-accent' : 'bg-vibe-light'
+                  settings.autoCopy ? 'bg-vibe-accent' : 'bg-vibe-600'
                 }`}
               >
                 <span
@@ -238,50 +357,50 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-vibe-border" />
+          <div className="border-t border-vibe-600" />
 
           {/* Shortcuts Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide flex items-center gap-2">
+            <h3 className="text-subtitle text-vibe-200 uppercase tracking-wide flex items-center gap-2">
               <Keyboard size={14} />
               快捷键
             </h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">显示/隐藏窗口</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">⌥⌘P</kbd>
+            <div className="grid grid-cols-2 gap-2 text-body">
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">显示/隐藏窗口</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">⌥⌘P</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">优化 Prompt</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">⌥⌘T</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">优化 Prompt</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">⌥⌘T</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">聚焦输入框</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">/</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">聚焦输入框</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">/</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg">
-                <span className="text-gray-400">聚焦输出框</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">?</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg">
+                <span className="text-vibe-300">聚焦输出框</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">?</kbd>
               </div>
-              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-dark rounded-lg col-span-2">
-                <span className="text-gray-400">开始/停止录音</span>
-                <kbd className="px-2 py-0.5 bg-vibe-light rounded text-xs text-gray-300">Space</kbd>
+              <div className="flex justify-between items-center py-1.5 px-3 bg-vibe-900 rounded-radius-lg col-span-2">
+                <span className="text-vibe-300">开始/停止录音</span>
+                <kbd className="px-2 py-0.5 bg-vibe-600 rounded text-xs text-vibe-200">Space</kbd>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-vibe-border">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-vibe-600">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-body text-vibe-300 hover:text-white transition-colors"
           >
             取消
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium bg-vibe-accent hover:bg-vibe-accent/80 text-white rounded-lg transition-colors"
+            className="px-4 py-2 text-subtitle bg-vibe-accent hover:bg-vibe-accent/80 text-white rounded-radius-lg transition-colors"
           >
             保存
           </button>

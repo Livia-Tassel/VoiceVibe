@@ -47,16 +47,16 @@ export function SpeechInput({
   return (
     <div className="flex flex-col h-full">
       {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-vibe-border bg-gradient-to-r from-transparent to-vibe-gray/30">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-vibe-600 bg-gradient-to-r from-transparent to-vibe-800/30">
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 rounded-full bg-gradient-to-b from-indigo-500 to-purple-500" />
-          <h3 className="text-sm font-medium text-gray-300">语音输入</h3>
+          <h3 className="text-subtitle text-vibe-200">语音输入</h3>
         </div>
         <div className="flex items-center gap-2">
           <span className="kbd">/</span>
           <button
             onClick={onClear}
-            className="p-1.5 rounded-lg hover:bg-vibe-light transition-colors text-gray-500 hover:text-white"
+            className="p-1.5 rounded-radius-lg hover:bg-vibe-600 transition-colors text-vibe-300 hover:text-white"
             title="清空"
           >
             <Trash2 size={14} />
@@ -71,7 +71,7 @@ export function SpeechInput({
           value={transcript}
           onChange={(e) => onTranscriptChange(e.target.value)}
           placeholder="点击麦克风按钮或按空格键开始/停止录音，或直接输入文字..."
-          className="w-full h-full p-4 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-sm leading-relaxed"
+          className="w-full h-full p-4 bg-transparent text-white placeholder-vibe-400 resize-none focus:outline-none text-body"
         />
         {!transcript && !interimTranscript && (
           <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-4 text-gray-400">
@@ -92,7 +92,7 @@ export function SpeechInput({
           </div>
         )}
         {interimTranscript && (
-          <div className="absolute bottom-24 left-4 right-4 text-blue-400 text-sm font-medium bg-vibe-dark/90 backdrop-blur-sm px-4 py-2.5 rounded-lg border border-blue-500/30 shadow-lg shadow-blue-500/10">
+          <div className="absolute bottom-24 left-4 right-4 text-blue-400 text-body font-medium bg-vibe-900/90 backdrop-blur-sm px-4 py-2.5 rounded-radius-lg border border-blue-500/30 shadow-soft shadow-blue-500/10">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               {interimTranscript}
@@ -102,11 +102,11 @@ export function SpeechInput({
       </div>
 
       {/* Action Footer */}
-      <div className="flex flex-col items-center gap-3 p-4 border-t border-vibe-border bg-gradient-to-t from-vibe-gray/30 to-transparent">
+      <div className="flex flex-col items-center gap-3 p-4 border-t border-vibe-600 bg-gradient-to-t from-vibe-800/30 to-transparent">
         <button
           onClick={handleMicClick}
           disabled={!isSupported}
-          className={`relative flex items-center gap-3 px-8 py-3.5 rounded-full font-medium transition-all duration-300 ${
+          className={`relative flex items-center gap-3 px-8 py-3.5 rounded-full text-subtitle transition-all duration-300 ${
             isListening
               ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl shadow-red-500/40 scale-105 recording-pulse'
               : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02]'
@@ -126,7 +126,7 @@ export function SpeechInput({
             </>
           )}
         </button>
-        <span className="text-xs text-gray-500 flex items-center gap-1.5">
+        <span className="text-xs text-vibe-300 flex items-center gap-1.5">
           按 <span className="kbd">Space</span> 快速开始/停止
         </span>
       </div>
