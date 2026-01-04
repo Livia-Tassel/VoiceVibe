@@ -2,6 +2,8 @@ import { app, BrowserWindow, globalShortcut, ipcMain, clipboard, screen, session
 import { join } from 'path'
 import { createHmac } from 'crypto'
 import WebSocket from 'ws'
+import fetch from 'node-fetch'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 // 代理地址配置（从环境变量读取）
 function resolveProxyRules(rawValue?: string): string | undefined {
@@ -81,7 +83,7 @@ async function transcribeWithXunfei(
         // 每帧发送的 base64 字符数（必须是 4 的倍数）
         const charsPerFrame = 2560 // 约 1920 字节的音频数据
 
-        // 发送第一帧
+        // 发送第一帧（关闭 dwa 动态修正，避免重复字问题）
         const firstFrame = {
           common: { app_id: appId },
           business: {
@@ -89,7 +91,7 @@ async function transcribeWithXunfei(
             domain: 'iat',
             accent: 'mandarin',
             vad_eos: 3000,
-            dwa: 'wpgs',
+            // 不使用 dwa: 'wpgs'，避免动态修正导致的重复字问题
           },
           data: {
             status: 0,
@@ -206,16 +208,13 @@ async function callOpenAI(endpoint: string, options: {
   proxyUrl?: string
   apiBaseUrl?: string
 }) {
-  const { default: fetch } = await import('node-fetch')
-
   const baseUrl = options.apiBaseUrl || 'https://api.openai.com'
   const url = `${baseUrl}${endpoint}`
   console.log('API URL:', url)
 
   // 配置代理
-  let agent: any = undefined
+  let agent: HttpsProxyAgent<string> | undefined = undefined
   if (options.proxyUrl) {
-    const { HttpsProxyAgent } = await import('https-proxy-agent')
     agent = new HttpsProxyAgent(options.proxyUrl)
     console.log('Using proxy:', options.proxyUrl)
   }
@@ -281,9 +280,15 @@ function createWindow() {
     mainWindow.loadFile(indexPath)
   }
 
-  // 开发时打开 DevTools
   if (process.env.VITE_DEV_SERVER_URL) {
+    console.log('Loading dev server:', process.env.VITE_DEV_SERVER_URL)
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
+  } else {
+    // 生产环境：加载打包后的 index.html
+    const indexPath = join(__dirname, '../dist/index.html')
+    console.log('Loading production file:', indexPath)
+    mainWindow.loadFile(indexPath)
   }
 
   mainWindow.once('ready-to-show', () => {
