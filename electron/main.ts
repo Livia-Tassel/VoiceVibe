@@ -270,7 +270,6 @@ function createWindow() {
 
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
-<<<<<<< Updated upstream
   const devServerUrl = process.env.VITE_DEV_SERVER_URL
   if (devServerUrl) {
     console.log('Loading URL:', devServerUrl)
@@ -281,10 +280,6 @@ function createWindow() {
     mainWindow.loadFile(indexPath)
   }
 
-  // 开发时打开 DevTools
-=======
-  // 开发环境使用 dev server，生产环境加载本地文件
->>>>>>> Stashed changes
   if (process.env.VITE_DEV_SERVER_URL) {
     console.log('Loading dev server:', process.env.VITE_DEV_SERVER_URL)
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
