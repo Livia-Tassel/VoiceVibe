@@ -28,9 +28,11 @@ function App() {
 
   const {
     isRecording,
+    error: recorderError,
     startRecording,
     stopRecording,
     resetRecording,
+    clearError: clearRecorderError,
   } = useAudioRecorder()
 
   // Update status based on state
@@ -47,6 +49,13 @@ function App() {
       setStatus('idle')
     }
   }, [isRecording, isTranscribing, isRefining, refinedPrompt])
+
+  useEffect(() => {
+    if (recorderError) {
+      showToast(recorderError, 'error')
+      clearRecorderError()
+    }
+  }, [recorderError, clearRecorderError])
 
   // Handle keyboard shortcuts
   useEffect(() => {

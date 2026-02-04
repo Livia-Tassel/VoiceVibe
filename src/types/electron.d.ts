@@ -15,6 +15,7 @@ export interface ElectronAPI {
   }
   openai: {
     chat: (args: { messages: Array<{ role: string, content: string }>, apiKey: string, proxyUrl?: string, apiBaseUrl?: string, model?: string }) => Promise<{ ok: boolean, status?: number, data?: any, error?: string }>
+    testConnection: (args: { apiKey: string, proxyUrl?: string, apiBaseUrl?: string }) => Promise<{ ok: boolean, status?: number, error?: string }>
   }
 }
 

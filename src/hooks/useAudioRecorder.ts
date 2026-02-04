@@ -7,10 +7,34 @@ export interface UseAudioRecorderReturn {
   startRecording: () => Promise<void>
   stopRecording: () => Promise<Blob | null>
   resetRecording: () => void
+  clearError: () => void
 }
 
 // 讯飞要求的采样率
 const TARGET_SAMPLE_RATE = 16000
+
+function getRecordingErrorMessage(err: unknown): string {
+  if (err instanceof DOMException) {
+    if (err.name === 'NotAllowedError') {
+      return '录音权限被拒绝，请在系统设置中允许麦克风访问。'
+    }
+    if (err.name === 'NotFoundError') {
+      return '未检测到麦克风设备，请确认已连接可用麦克风。'
+    }
+    if (err.name === 'NotReadableError') {
+      return '麦克风正在被其他应用占用，请关闭占用应用后重试。'
+    }
+    if (err.name === 'OverconstrainedError') {
+      return '当前设备不支持所需的录音参数，请检查音频设置。'
+    }
+  }
+
+  if (err instanceof Error) {
+    return err.message || '无法启动录音。请确保麦克风权限已授予。'
+  }
+
+  return '无法启动录音。请确保麦克风权限已授予。'
+}
 
 export function useAudioRecorder(): UseAudioRecorderReturn {
   const [isRecording, setIsRecording] = useState(false)
@@ -73,7 +97,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
     } catch (err) {
       console.error('Failed to start recording:', err)
-      setError('无法启动录音。请确保麦克风权限已授予。')
+      setError(getRecordingErrorMessage(err))
     }
   }, [])
 
@@ -157,6 +181,10 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     samplesRef.current = []
   }, [])
 
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
+
   return {
     isRecording,
     audioBlob,
@@ -164,5 +192,6 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     startRecording,
     stopRecording,
     resetRecording,
+    clearError,
   }
 }
