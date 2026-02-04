@@ -56,6 +56,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [errors, setErrors] = useState<Partial<Record<keyof Settings, string>>>({})
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
   const [testMessage, setTestMessage] = useState('')
+  const hasErrors = Object.keys(errors).length > 0
 
   useEffect(() => {
     if (isOpen) {
@@ -119,6 +120,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, [settings])
 
   const handleSave = () => {
+    if (hasErrors) {
+      setTestStatus('error')
+      setTestMessage('请先修正表单错误后再保存')
+      return
+    }
     saveSettings(settings)
     onClose()
   }
@@ -134,9 +140,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     setTestStatus('testing')
     setTestMessage('正在测试连接...')
-    await new Promise(resolve => setTimeout(resolve, 900))
-    setTestStatus('success')
-    setTestMessage('连接成功，可正常调用')
+    try {
+      const result = await window.electronAPI.openai.testConnection({
+        apiKey: settings.apiKey,
+        proxyUrl: settings.proxyUrl,
+        apiBaseUrl: settings.apiBaseUrl,
+      })
+
+      if (result.ok) {
+        setTestStatus('success')
+        setTestMessage('连接成功，可正常调用')
+      } else {
+        setTestStatus('error')
+        setTestMessage(result.error || `连接失败（${result.status || '未知状态'}）`)
+      }
+    } catch (error) {
+      setTestStatus('error')
+      setTestMessage(error instanceof Error ? error.message : '连接失败')
+    }
   }
 
   if (!isOpen) return null
@@ -400,7 +421,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-subtitle bg-vibe-accent hover:bg-vibe-accent/80 text-white rounded-radius-lg transition-colors"
+            disabled={hasErrors}
+            className="px-4 py-2 text-subtitle bg-vibe-accent hover:bg-vibe-accent/80 text-white rounded-radius-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             保存
           </button>

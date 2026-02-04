@@ -17,6 +17,7 @@ export interface ElectronAPI {
   }
   openai: {
     chat: (args: { messages: Array<{ role: string, content: string }>, apiKey: string, proxyUrl?: string, apiBaseUrl?: string, model?: string }) => Promise<{ ok: boolean, status?: number, data?: any, error?: string }>
+    testConnection: (args: { apiKey: string, proxyUrl?: string, apiBaseUrl?: string }) => Promise<{ ok: boolean, status?: number, error?: string }>
   }
 }
 
@@ -39,5 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openai: {
     chat: (args: { messages: Array<{ role: string, content: string }>, apiKey: string, proxyUrl?: string, apiBaseUrl?: string, model?: string }) =>
       ipcRenderer.invoke('openai:chat', args),
+    testConnection: (args: { apiKey: string, proxyUrl?: string, apiBaseUrl?: string }) =>
+      ipcRenderer.invoke('openai:test', args),
   },
 } as ElectronAPI)

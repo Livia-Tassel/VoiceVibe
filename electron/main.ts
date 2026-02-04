@@ -425,3 +425,31 @@ ipcMain.handle('openai:chat', async (_event, args: {
     return { ok: false, error: String(error) }
   }
 })
+
+ipcMain.handle('openai:test', async (_event, args: {
+  apiKey: string
+  proxyUrl?: string
+  apiBaseUrl?: string
+}) => {
+  try {
+    const result = await callOpenAI('/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${args.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      proxyUrl: args.proxyUrl,
+      apiBaseUrl: args.apiBaseUrl,
+    })
+
+    if (!result.ok) {
+      const message = result.data?.error?.message || result.data?.error || `API 错误: ${result.status}`
+      return { ok: false, status: result.status, error: message }
+    }
+
+    return { ok: true, status: result.status }
+  } catch (error) {
+    console.error('Test connection error:', error)
+    return { ok: false, error: String(error) }
+  }
+})
