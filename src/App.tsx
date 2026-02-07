@@ -182,9 +182,9 @@ function App() {
 
   const handleRefine = () => handleRefineWithText(transcript)
 
-  const copyToClipboard = async (text?: string) => {
+  const copyToClipboard = async (text?: string): Promise<boolean> => {
     const textToCopy = text || refinedPrompt
-    if (!textToCopy) return
+    if (!textToCopy) return false
 
     try {
       if (window.electronAPI) {
@@ -193,8 +193,10 @@ function App() {
         await navigator.clipboard.writeText(textToCopy)
       }
       showToast('已复制到剪贴板!', 'success')
+      return true
     } catch {
       showToast('复制失败', 'error')
+      return false
     }
   }
 
@@ -241,7 +243,7 @@ function App() {
                 isLoading={isRefining || isTranscribing}
                 error={error}
                 onContentChange={setRefinedPrompt}
-                onCopy={() => copyToClipboard()}
+                onCopy={copyToClipboard}
                 onRefine={handleRefine}
                 onClear={handleClearOutput}
                 hasInput={transcript.trim().length > 0}
