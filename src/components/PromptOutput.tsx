@@ -7,7 +7,7 @@ interface PromptOutputProps {
   isLoading: boolean
   error: string | null
   onContentChange: (text: string) => void
-  onCopy: () => void
+  onCopy: () => Promise<boolean> | boolean
   onRefine: () => void
   onClear: () => void
   hasInput: boolean
@@ -28,8 +28,9 @@ export function PromptOutput({
   const sampleOutput =
     '你是一位资深品牌策略专家。请将以下会议要点整理为一份结构化营销方案，包括目标受众、核心卖点、传播渠道与执行节奏，并提供 3 条可直接使用的广告语。'
 
-  const handleCopy = () => {
-    onCopy()
+  const handleCopy = async () => {
+    const didCopy = await onCopy()
+    if (!didCopy) return
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
