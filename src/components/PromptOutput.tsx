@@ -6,7 +6,7 @@ interface PromptOutputProps {
   isLoading: boolean
   error: string | null
   onContentChange: (text: string) => void
-  onCopy: () => void
+  onCopy: () => Promise<boolean>
   onRefine: () => void
   onClear: () => void
   hasInput: boolean
@@ -23,11 +23,27 @@ export function PromptOutput({
   hasInput,
 }: PromptOutputProps) {
   const [copied, setCopied] = useState(false)
+  const [isCopying, setIsCopying] = useState(false)
 
-  const handleCopy = () => {
-    onCopy()
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleCopy = async () => {
+    if (isCopying || !content) {
+      return
+    }
+
+    setIsCopying(true)
+    try {
+      const didCopy = await onCopy()
+      if (didCopy) {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } else {
+        setCopied(false)
+      }
+    } catch {
+      setCopied(false)
+    } finally {
+      setIsCopying(false)
+    }
   }
 
   return (
@@ -49,17 +65,17 @@ export function PromptOutput({
           </button>
           <button
             onClick={handleCopy}
-            disabled={!content}
+            disabled={!content || isCopying}
             className={`p-1.5 rounded-radius-lg transition-all ${
-              content
+              content && !isCopying
                 ? copied
                   ? 'bg-emerald-500/20 text-emerald-400'
                   : 'hover:bg-vibe-600 text-vibe-300 hover:text-white'
                 : 'text-vibe-500 cursor-not-allowed'
             }`}
-            title="复制到剪贴板"
+            title={isCopying ? 'Copying…' : '复制到剪贴板'}
           >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {isCopying ? <Loader2 size={14} className="animate-spin" /> : copied ? <Check size={14} /> : <Copy size={14} />}
           </button>
         </div>
       </div>
@@ -120,17 +136,17 @@ export function PromptOutput({
           </button>
           <button
             onClick={handleCopy}
-            disabled={!content || isLoading}
+            disabled={!content || isLoading || isCopying}
             className={`flex items-center gap-2 px-5 py-3 rounded-full text-subtitle transition-all duration-300 ${
-              content && !isLoading
+              content && !isLoading && !isCopying
                 ? copied
                   ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                   : 'bg-vibe-600 hover:bg-vibe-500 text-vibe-200 hover:text-white'
                 : 'bg-vibe-700/50 text-vibe-500 cursor-not-allowed'
             }`}
           >
-            {copied ? <Check size={18} /> : <Copy size={18} />}
-            <span>{copied ? '已复制' : '复制'}</span>
+            {isCopying ? <Loader2 size={18} className="animate-spin" /> : copied ? <Check size={18} /> : <Copy size={18} />}
+            <span>{isCopying ? 'Copying…' : copied ? 'Copied!' : '复制'}</span>
           </button>
         </div>
         <span className="text-xs text-vibe-300 flex items-center gap-1.5">

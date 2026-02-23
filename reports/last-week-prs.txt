@@ -1,0 +1,3 @@
+07a406b|Tassel|2026-02-04|Merge pull request #11 from Livia-Tassel/codex/review-project-and-suggest-improvement-plan
+c3da1e6|Tassel|2026-02-04|Improve settings validation and recorder errors
+07a406b|Tassel|2026-02-04|Merge pull request #11 from Livia-Tassel/codex/review-project-and-suggest-improvement-plan
