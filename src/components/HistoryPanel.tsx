@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Clock, Trash2 } from 'lucide-react'
 import { HistoryEntry, getHistory, deleteHistoryEntry, clearHistory } from '../services/history'
 
@@ -26,14 +26,20 @@ function truncate(str: string, len: number): string {
 }
 
 export function HistoryPanel({ isOpen, onClose, onSelect }: HistoryPanelProps) {
-  const [entries, setEntries] = useState<HistoryEntry[]>(() => getHistory())
+  const [entries, setEntries] = useState<HistoryEntry[]>([])
   const [confirmClear, setConfirmClear] = useState(false)
 
-  const refresh = () => setEntries(getHistory())
+  // Refresh entries every time the panel opens; reset confirmClear
+  useEffect(() => {
+    if (isOpen) {
+      setEntries(getHistory())
+      setConfirmClear(false)
+    }
+  }, [isOpen])
 
   const handleDelete = (id: string) => {
     deleteHistoryEntry(id)
-    refresh()
+    setEntries(getHistory())
   }
 
   const handleClearAll = () => {
@@ -42,21 +48,13 @@ export function HistoryPanel({ isOpen, onClose, onSelect }: HistoryPanelProps) {
       return
     }
     clearHistory()
-    refresh()
+    setEntries([])
     setConfirmClear(false)
   }
 
   const handleSelect = (entry: HistoryEntry) => {
     onSelect(entry)
     onClose()
-  }
-
-  // Refresh when opening
-  if (isOpen && entries.length === 0) {
-    const latest = getHistory()
-    if (latest.length > 0 && entries.length !== latest.length) {
-      setEntries(latest)
-    }
   }
 
   return (

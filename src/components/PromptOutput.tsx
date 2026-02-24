@@ -12,27 +12,6 @@ interface PromptOutputProps {
   hasInput: boolean
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center h-full select-none pointer-events-none">
-      {/* CSS-only sparkles illustration */}
-      <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-full border-2 border-dashed border-teal/30 flex items-center justify-center animate-breathe">
-          <div className="w-12 h-12 rounded-full bg-teal/10 flex items-center justify-center">
-            <Sparkles size={24} className="text-teal/60" />
-          </div>
-        </div>
-        {/* Floating dots */}
-        <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-teal/30 animate-float" />
-        <div className="absolute -bottom-2 -right-1 w-1.5 h-1.5 rounded-full bg-accent/30 animate-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 -left-3 w-1 h-1 rounded-full bg-teal/20 animate-float" style={{ animationDelay: '0.5s' }} />
-      </div>
-      <p className="text-sm text-vibe-400 font-body mb-1">优化后的 Prompt 将显示在这里</p>
-      <p className="text-xs text-vibe-500 font-body">录音或输入文字后自动生成</p>
-    </div>
-  )
-}
-
 export function PromptOutput({
   content,
   isLoading,
@@ -45,6 +24,7 @@ export function PromptOutput({
 }: PromptOutputProps) {
   const [copied, setCopied] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
 
   const handleCopy = async () => {
     if (isCopying || !content) {
@@ -68,6 +48,7 @@ export function PromptOutput({
   }
 
   const charCount = content.length
+  const showEmptyState = !content && !isLoading && !error && !isFocused
 
   return (
     <div className="flex flex-col h-full">
@@ -122,16 +103,37 @@ export function PromptOutput({
               <div className="text-red-400 text-body text-center">{error}</div>
             </div>
           </div>
-        ) : content ? (
-          <textarea
-            id="output-textarea"
-            value={content}
-            onChange={(e) => onContentChange(e.target.value)}
-            placeholder="优化后的结构化 Prompt 将显示在这里..."
-            className="w-full h-full p-4 bg-transparent text-white placeholder-vibe-400 resize-none focus:outline-none text-body"
-          />
         ) : (
-          <EmptyState />
+          <>
+            {/* Empty state overlay */}
+            {showEmptyState && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none z-10">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 rounded-full border-2 border-dashed border-teal/30 flex items-center justify-center animate-breathe">
+                    <div className="w-12 h-12 rounded-full bg-teal/10 flex items-center justify-center">
+                      <Sparkles size={24} className="text-teal/60" />
+                    </div>
+                  </div>
+                  <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-teal/30 animate-float" />
+                  <div className="absolute -bottom-2 -right-1 w-1.5 h-1.5 rounded-full bg-accent/30 animate-float" style={{ animationDelay: '1s' }} />
+                  <div className="absolute top-1/2 -left-3 w-1 h-1 rounded-full bg-teal/20 animate-float" style={{ animationDelay: '0.5s' }} />
+                </div>
+                <p className="text-sm text-vibe-400 font-body mb-1">优化后的 Prompt 将显示在这里</p>
+                <p className="text-xs text-vibe-500 font-body">录音或输入文字后自动生成</p>
+              </div>
+            )}
+
+            {/* Always-mounted textarea */}
+            <textarea
+              id="output-textarea"
+              value={content}
+              onChange={(e) => onContentChange(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={showEmptyState ? '' : '优化后的结构化 Prompt 将显示在这里...'}
+              className="w-full h-full p-4 bg-transparent text-white placeholder-vibe-400 resize-none focus:outline-none text-body relative z-20"
+            />
+          </>
         )}
       </div>
 

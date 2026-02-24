@@ -394,10 +394,18 @@ ipcMain.handle('whisper:test', async (_event, args: {
       const url = `wss://${host}${path}?authorization=${authorization}&date=${encodeURIComponent(date)}&host=${host}`
 
       const ws = new WebSocket(url)
+      let resolved = false
+
+      const done = (result: { ok: boolean; error?: string }) => {
+        if (resolved) return
+        resolved = true
+        clearTimeout(timeout)
+        resolve(result)
+      }
 
       const timeout = setTimeout(() => {
         ws.close()
-        resolve({ ok: false, error: '连接超时' })
+        done({ ok: false, error: '连接超时' })
       }, 10000)
 
       ws.on('open', () => {
@@ -420,29 +428,28 @@ ipcMain.handle('whisper:test', async (_event, args: {
       })
 
       ws.on('message', (data: WebSocket.Data) => {
-        clearTimeout(timeout)
         try {
           const result = JSON.parse(data.toString())
           if (result.code === 0) {
             ws.close()
-            resolve({ ok: true })
+            done({ ok: true })
           } else {
             ws.close()
-            resolve({ ok: false, error: `讯飞错误 ${result.code}: ${result.message}` })
+            done({ ok: false, error: `讯飞错误 ${result.code}: ${result.message}` })
           }
         } catch {
           ws.close()
-          resolve({ ok: true }) // Got a response, auth succeeded
+          done({ ok: true }) // Got a response, auth succeeded
         }
       })
 
       ws.on('error', (err) => {
-        clearTimeout(timeout)
-        resolve({ ok: false, error: `WebSocket 错误: ${err.message}` })
+        done({ ok: false, error: `WebSocket 错误: ${err.message}` })
       })
 
       ws.on('close', () => {
-        clearTimeout(timeout)
+        // Ensure promise resolves even if close fires without message/error
+        done({ ok: false, error: '连接已关闭，未收到响应' })
       })
     } catch (error) {
       resolve({ ok: false, error: String(error) })

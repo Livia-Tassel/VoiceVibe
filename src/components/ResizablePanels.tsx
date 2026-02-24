@@ -18,6 +18,7 @@ export function ResizablePanels({
   const [leftPercent, setLeftPercent] = useState(defaultLeftPercent)
   const containerRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
+  const handleWidth = 12 // w-3 = 0.75rem = 12px
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -31,7 +32,9 @@ export function ResizablePanels({
       if (!isDragging.current || !containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
-      const percent = (x / rect.width) * 100
+      // Account for handle width: usable space is container width minus handle
+      const usableWidth = rect.width - handleWidth
+      const percent = (x / usableWidth) * 100
       setLeftPercent(Math.min(maxLeftPercent, Math.max(minLeftPercent, percent)))
     }
 
@@ -55,7 +58,7 @@ export function ResizablePanels({
     <div ref={containerRef} className="flex h-full w-full">
       <div
         className="h-full overflow-hidden panel-glass rounded-2xl panel-glow-accent animate-slide-in-left"
-        style={{ width: `${leftPercent}%` }}
+        style={{ width: `calc(${leftPercent}% - ${handleWidth / 2}px)` }}
       >
         {leftPanel}
       </div>
@@ -65,7 +68,7 @@ export function ResizablePanels({
       />
       <div
         className="h-full overflow-hidden panel-glass rounded-2xl panel-glow-teal animate-slide-in-right"
-        style={{ width: `${100 - leftPercent}%` }}
+        style={{ width: `calc(${100 - leftPercent}% - ${handleWidth / 2}px)` }}
       >
         {rightPanel}
       </div>

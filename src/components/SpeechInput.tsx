@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react'
 import { Mic, MicOff, Trash2 } from 'lucide-react'
 
 interface SpeechInputProps {
@@ -25,27 +26,6 @@ function SoundWave() {
   )
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center h-full select-none pointer-events-none">
-      {/* CSS-only mic illustration */}
-      <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-full border-2 border-dashed border-accent/30 flex items-center justify-center animate-breathe">
-          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-            <Mic size={24} className="text-accent/60" />
-          </div>
-        </div>
-        {/* Floating dots */}
-        <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-accent/30 animate-float" />
-        <div className="absolute -bottom-2 -left-1 w-1.5 h-1.5 rounded-full bg-teal/30 animate-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-accent/20 animate-float" style={{ animationDelay: '0.5s' }} />
-      </div>
-      <p className="text-sm text-vibe-400 font-body mb-1">按下麦克风或空格键开始录音</p>
-      <p className="text-xs text-vibe-500 font-body">也可以直接在此输入文字</p>
-    </div>
-  )
-}
-
 export function SpeechInput({
   transcript,
   interimTranscript,
@@ -56,6 +36,8 @@ export function SpeechInput({
   onStopListening,
   onClear,
 }: SpeechInputProps) {
+  const [isFocused, setIsFocused] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleMicClick = () => {
     if (isListening) {
@@ -66,6 +48,7 @@ export function SpeechInput({
   }
 
   const charCount = transcript.length
+  const showEmptyState = !transcript && !isListening && !isFocused
 
   return (
     <div className="flex flex-col h-full">
@@ -87,31 +70,40 @@ export function SpeechInput({
         </div>
       </div>
 
-      {/* Textarea */}
+      {/* Textarea + Empty State */}
       <div className="flex-1 relative">
-        {!transcript && !isListening ? (
-          <EmptyState />
-        ) : (
-          <textarea
-            id="input-textarea"
-            value={transcript}
-            onChange={(e) => onTranscriptChange(e.target.value)}
-            placeholder="点击麦克风按钮或按空格键开始/停止录音，或直接输入文字..."
-            className="w-full h-full p-4 bg-transparent text-white placeholder-vibe-400 resize-none focus:outline-none text-body"
-          />
+        {/* Empty state overlay — disappears when focused or has content */}
+        {showEmptyState && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none z-10">
+            <div className="relative mb-6">
+              <div className="w-20 h-20 rounded-full border-2 border-dashed border-accent/30 flex items-center justify-center animate-breathe">
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                  <Mic size={24} className="text-accent/60" />
+                </div>
+              </div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-accent/30 animate-float" />
+              <div className="absolute -bottom-2 -left-1 w-1.5 h-1.5 rounded-full bg-teal/30 animate-float" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-accent/20 animate-float" style={{ animationDelay: '0.5s' }} />
+            </div>
+            <p className="text-sm text-vibe-400 font-body mb-1">按下麦克风或空格键开始录音</p>
+            <p className="text-xs text-vibe-500 font-body">也可以直接在此输入文字</p>
+          </div>
         )}
-        {/* Make textarea accessible even with empty state */}
-        {!transcript && !isListening && (
-          <textarea
-            id="input-textarea"
-            value={transcript}
-            onChange={(e) => onTranscriptChange(e.target.value)}
-            className="absolute inset-0 w-full h-full p-4 bg-transparent text-white resize-none focus:outline-none text-body opacity-0 focus:opacity-100"
-            placeholder="开始输入..."
-          />
-        )}
+
+        {/* Always-mounted textarea */}
+        <textarea
+          ref={textareaRef}
+          id="input-textarea"
+          value={transcript}
+          onChange={(e) => onTranscriptChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={showEmptyState ? '' : '点击麦克风按钮或按空格键开始/停止录音，或直接输入文字...'}
+          className="w-full h-full p-4 bg-transparent text-white placeholder-vibe-400 resize-none focus:outline-none text-body relative z-20"
+        />
+
         {interimTranscript && (
-          <div className="absolute bottom-24 left-4 right-4 text-info text-body font-medium bg-vibe-900/90 backdrop-blur-sm px-4 py-2.5 rounded-radius-lg border border-info/30 shadow-soft shadow-info/10">
+          <div className="absolute bottom-24 left-4 right-4 text-info text-body font-medium bg-vibe-900/90 backdrop-blur-sm px-4 py-2.5 rounded-radius-lg border border-info/30 shadow-soft shadow-info/10 z-30">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-info rounded-full animate-pulse" />
               {interimTranscript}
