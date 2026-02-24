@@ -42,7 +42,7 @@ export function Toast({ message, type = 'success', duration = 2000, onClose }: T
       }`}
     >
       <span className="p-1 rounded-full bg-white/20">{icon}</span>
-      <span className="text-sm font-medium">{message}</span>
+      <span className="text-sm font-medium font-body">{message}</span>
       <button
         onClick={() => {
           setIsVisible(false)

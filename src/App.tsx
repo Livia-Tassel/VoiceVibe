@@ -4,9 +4,13 @@ import { SpeechInput } from './components/SpeechInput'
 import { PromptOutput } from './components/PromptOutput'
 import { SettingsModal, getSettings } from './components/SettingsModal'
 import { Toast } from './components/Toast'
+import { ResizablePanels } from './components/ResizablePanels'
+import { HistoryPanel } from './components/HistoryPanel'
+import { OnboardingModal } from './components/OnboardingModal'
 import { useAudioRecorder } from './hooks/useAudioRecorder'
 import { transcribeAudio } from './services/whisper'
 import { refinePrompt } from './services/ai'
+import { addHistoryEntry, HistoryEntry } from './services/history'
 
 type AppStatus = 'idle' | 'listening' | 'transcribing' | 'processing' | 'ready'
 
@@ -18,6 +22,8 @@ interface ToastState {
 
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const [status, setStatus] = useState<AppStatus>('idle')
   const [transcript, setTranscript] = useState('')
   const [refinedPrompt, setRefinedPrompt] = useState('')
@@ -32,6 +38,17 @@ function App() {
     stopRecording,
     resetRecording,
   } = useAudioRecorder()
+
+  // Check if onboarding is needed
+  useEffect(() => {
+    const onboarded = localStorage.getItem('voicevibe-onboarded')
+    if (!onboarded) {
+      const settings = getSettings()
+      if (!settings.apiKey && !settings.speechAppId) {
+        setShowOnboarding(true)
+      }
+    }
+  }, [])
 
   // Update status based on state
   useEffect(() => {
@@ -162,6 +179,12 @@ function App() {
     if (result.success && result.content) {
       setRefinedPrompt(result.content)
 
+      // Save to history
+      addHistoryEntry({
+        rawTranscript: inputText,
+        refinedPrompt: result.content,
+      })
+
       // Auto-copy if enabled
       if (settings.autoCopy) {
         await copyToClipboard(result.content)
@@ -172,6 +195,12 @@ function App() {
   }
 
   const handleRefine = () => handleRefineWithText(transcript)
+
+  const handleHistorySelect = (entry: HistoryEntry) => {
+    setTranscript(entry.rawTranscript)
+    setRefinedPrompt(entry.refinedPrompt)
+    setError(null)
+  }
 
   const copyToClipboard = async (text?: string): Promise<boolean> => {
     const textToCopy = text || refinedPrompt
@@ -207,14 +236,17 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col app-background text-white">
-      <Header status={status} onSettingsClick={() => setIsSettingsOpen(true)} />
+    <div className="min-h-screen flex flex-col app-background text-white font-body">
+      <Header
+        status={status}
+        onSettingsClick={() => setIsSettingsOpen(true)}
+        onHistoryClick={() => setIsHistoryOpen(true)}
+      />
 
       <main className="flex-1 overflow-hidden">
         <div className="mx-auto h-full w-full max-w-[1200px] px-8 py-6">
-          <div className="grid h-full grid-cols-2 gap-6">
-            {/* Left Panel - Input */}
-            <div className="rounded-2xl border border-vibe-border/60 bg-gradient-to-b from-vibe-dark/90 via-vibe-dark/80 to-vibe-gray/30 shadow-2xl overflow-hidden">
+          <ResizablePanels
+            leftPanel={
               <SpeechInput
                 transcript={transcript}
                 interimTranscript={isTranscribing ? '正在转录...' : (isRecording ? '正在录音...' : '')}
@@ -225,10 +257,8 @@ function App() {
                 onStopListening={handleStopRecording}
                 onClear={handleClearInput}
               />
-            </div>
-
-            {/* Right Panel - Output */}
-            <div className="rounded-2xl border border-vibe-border/60 bg-gradient-to-b from-vibe-dark/90 via-vibe-dark/80 to-vibe-gray/30 shadow-2xl overflow-hidden">
+            }
+            rightPanel={
               <PromptOutput
                 content={refinedPrompt}
                 isLoading={isRefining || isTranscribing}
@@ -239,8 +269,8 @@ function App() {
                 onClear={handleClearOutput}
                 hasInput={transcript.trim().length > 0}
               />
-            </div>
-          </div>
+            }
+          />
         </div>
       </main>
 
@@ -248,6 +278,19 @@ function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* History Panel */}
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onSelect={handleHistorySelect}
+      />
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
       />
 
       {/* Toast */}

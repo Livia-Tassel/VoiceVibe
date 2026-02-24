@@ -14,6 +14,7 @@ export interface ElectronAPI {
   }
   whisper: {
     transcribe: (args: { audioData: number[], language: string, appId: string, apiKey: string, apiSecret: string }) => Promise<{ ok: boolean, text?: string, error?: string }>
+    test: (args: { appId: string, apiKey: string, apiSecret: string }) => Promise<{ ok: boolean, error?: string }>
   }
   openai: {
     chat: (args: { messages: Array<{ role: string, content: string }>, apiKey: string, proxyUrl?: string, apiBaseUrl?: string, model?: string }) => Promise<{ ok: boolean, status?: number, data?: any, error?: string }>
@@ -35,6 +36,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   whisper: {
     transcribe: (args: { audioData: number[], language: string, appId: string, apiKey: string, apiSecret: string }) =>
       ipcRenderer.invoke('whisper:transcribe', args),
+    test: (args: { appId: string, apiKey: string, apiSecret: string }) =>
+      ipcRenderer.invoke('whisper:test', args),
   },
   openai: {
     chat: (args: { messages: Array<{ role: string, content: string }>, apiKey: string, proxyUrl?: string, apiBaseUrl?: string, model?: string }) =>

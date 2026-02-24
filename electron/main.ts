@@ -371,6 +371,85 @@ ipcMain.handle('clipboard:write', (_event, text: string) => {
 
 ipcMain.handle('clipboard:read', () => clipboard.readText())
 
+// 讯飞连接测试
+ipcMain.handle('whisper:test', async (_event, args: {
+  appId: string
+  apiKey: string
+  apiSecret: string
+}) => {
+  return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+    try {
+      const host = 'iat-api.xfyun.cn'
+      const path = '/v2/iat'
+      const date = new Date().toUTCString()
+
+      const signatureOrigin = `host: ${host}\ndate: ${date}\nGET ${path} HTTP/1.1`
+      const signature = createHmac('sha256', args.apiSecret)
+        .update(signatureOrigin)
+        .digest('base64')
+
+      const authorizationOrigin = `api_key="${args.apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
+      const authorization = Buffer.from(authorizationOrigin).toString('base64')
+
+      const url = `wss://${host}${path}?authorization=${authorization}&date=${encodeURIComponent(date)}&host=${host}`
+
+      const ws = new WebSocket(url)
+
+      const timeout = setTimeout(() => {
+        ws.close()
+        resolve({ ok: false, error: '连接超时' })
+      }, 10000)
+
+      ws.on('open', () => {
+        // Send a minimal end-frame to test auth
+        const endFrame = {
+          common: { app_id: args.appId },
+          business: {
+            language: 'zh_cn',
+            domain: 'iat',
+            accent: 'mandarin',
+          },
+          data: {
+            status: 2,
+            format: 'audio/L16;rate=16000',
+            encoding: 'raw',
+            audio: '',
+          },
+        }
+        ws.send(JSON.stringify(endFrame))
+      })
+
+      ws.on('message', (data: WebSocket.Data) => {
+        clearTimeout(timeout)
+        try {
+          const result = JSON.parse(data.toString())
+          if (result.code === 0) {
+            ws.close()
+            resolve({ ok: true })
+          } else {
+            ws.close()
+            resolve({ ok: false, error: `讯飞错误 ${result.code}: ${result.message}` })
+          }
+        } catch {
+          ws.close()
+          resolve({ ok: true }) // Got a response, auth succeeded
+        }
+      })
+
+      ws.on('error', (err) => {
+        clearTimeout(timeout)
+        resolve({ ok: false, error: `WebSocket 错误: ${err.message}` })
+      })
+
+      ws.on('close', () => {
+        clearTimeout(timeout)
+      })
+    } catch (error) {
+      resolve({ ok: false, error: String(error) })
+    }
+  })
+})
+
 // 讯飞语音识别
 ipcMain.handle('whisper:transcribe', async (_event, args: {
   audioData: number[]

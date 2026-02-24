@@ -4,15 +4,15 @@
 
 @layer components {
   .text-title {
-    @apply text-lg font-semibold tracking-tight;
+    @apply text-lg font-semibold tracking-tight font-display;
   }
 
   .text-subtitle {
-    @apply text-sm font-medium;
+    @apply text-sm font-medium font-body;
   }
 
   .text-body {
-    @apply text-sm leading-relaxed;
+    @apply text-sm leading-relaxed font-body;
   }
 }
 
@@ -29,24 +29,29 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: transparent;
   color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.app-background {
-  background-color: #0b0d12;
-  background-image:
-    linear-gradient(140deg, rgba(99, 102, 241, 0.18) 0%, rgba(236, 72, 153, 0.14) 55%, rgba(15, 23, 42, 0.9) 100%),
-    radial-gradient(circle at 20% 10%, rgba(148, 163, 184, 0.15), transparent 55%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
-  background-size: cover, cover, 160px 160px;
-  background-position: center, top left, center;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Custom scrollbar */
+.app-background {
+  background-color: #08090c;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 15% 10%, rgba(224, 138, 78, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 85% 90%, rgba(62, 207, 180, 0.10), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(120, 80, 160, 0.06), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.10'/%3E%3C/svg%3E");
+  background-size: cover, cover, cover, 160px 160px;
+  background-position: center, center, center, center;
+}
+
+/* Custom scrollbar — warm tones */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -57,12 +62,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #444444;
+  background: rgba(224, 138, 78, 0.25);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+  background: rgba(224, 138, 78, 0.45);
 }
 
 /* Textarea styling */
@@ -76,7 +81,7 @@ textarea::-webkit-scrollbar {
 
 /* Selection */
 ::selection {
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(224, 138, 78, 0.35);
 }
 
 /* Window drag region */
@@ -127,9 +132,9 @@ textarea::-webkit-scrollbar {
 .sound-wave-bar:nth-child(6) { animation-delay: 0.1s; }
 .sound-wave-bar:nth-child(7) { animation-delay: 0s; }
 
-/* Gradient text */
+/* Gradient text — copper to teal */
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  background: linear-gradient(135deg, #e08a4e 0%, #f0a870 40%, #3ecfb4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -149,11 +154,54 @@ textarea::-webkit-scrollbar {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.08) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Panel glass morphism */
+.panel-glass {
+  background: linear-gradient(
+    165deg,
+    rgba(21, 24, 30, 0.92) 0%,
+    rgba(21, 24, 30, 0.85) 50%,
+    rgba(30, 35, 43, 0.40) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 24px 50px -28px rgba(15, 23, 42, 0.75),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Resize handle */
+.resize-handle {
+  position: relative;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.resize-handle::before {
+  content: '';
+  width: 3px;
+  height: 32px;
+  border-radius: 2px;
+  background: rgba(224, 138, 78, 0.25);
+  transition: all 0.2s ease;
+}
+
+.resize-handle:hover::before,
+.resize-handle.active::before {
+  height: 48px;
+  width: 4px;
+  background: rgba(224, 138, 78, 0.6);
+  box-shadow: 0 0 12px rgba(224, 138, 78, 0.3);
 }
 
 /* Keyboard shortcut style */
@@ -163,11 +211,11 @@ textarea::-webkit-scrollbar {
   justify-content: center;
   padding: 2px 6px;
   font-size: 11px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* Button hover effects */
@@ -175,11 +223,11 @@ button {
   transition: all 0.2s ease;
 }
 
-/* Focus states */
+/* Focus states — copper accent */
 button:focus-visible,
 textarea:focus-visible,
 input:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #e08a4e;
   outline-offset: 2px;
 }
 
@@ -187,4 +235,19 @@ input:focus-visible {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* Panel focus glow */
+.panel-glow-accent {
+  transition: box-shadow 0.4s ease;
+}
+.panel-glow-accent:focus-within {
+  box-shadow: 0 0 0 1px rgba(224, 138, 78, 0.3), 0 0 24px rgba(224, 138, 78, 0.08);
+}
+
+.panel-glow-teal {
+  transition: box-shadow 0.4s ease;
+}
+.panel-glow-teal:focus-within {
+  box-shadow: 0 0 0 1px rgba(62, 207, 180, 0.3), 0 0 24px rgba(62, 207, 180, 0.08);
 }
