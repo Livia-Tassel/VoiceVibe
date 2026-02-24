@@ -63,6 +63,7 @@ export function HistoryPanel({ isOpen, onClose, onSelect }: HistoryPanelProps) {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-fade-in"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           onClick={onClose}
         />
       )}
@@ -72,6 +73,7 @@ export function HistoryPanel({ isOpen, onClose, onSelect }: HistoryPanelProps) {
         className={`fixed top-0 right-0 z-50 h-full w-[360px] bg-vibe-800/95 backdrop-blur-xl border-l border-vibe-600/60 shadow-2xl transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-vibe-600/60">

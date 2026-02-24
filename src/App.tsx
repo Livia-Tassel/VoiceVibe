@@ -243,7 +243,7 @@ function App() {
         onHistoryClick={() => setIsHistoryOpen(true)}
       />
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
         <div className="mx-auto h-full w-full max-w-[1200px] px-8 py-6">
           <ResizablePanels
             leftPanel={

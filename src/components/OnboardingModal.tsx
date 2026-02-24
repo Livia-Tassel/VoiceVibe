@@ -28,7 +28,7 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
       <div className="relative bg-vibe-800 border border-vibe-600/60 rounded-2xl shadow-card w-[480px] max-h-[85vh] overflow-hidden animate-scale-in">
 
